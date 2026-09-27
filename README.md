@@ -82,10 +82,37 @@ helpers, 13 locales aur fonts** usi ek file me embedded hain.
 - `/setimg stats ...` — stats/alive ke liye alag image · `/setimg show` · `/setimg remove`
 - **Image database me save nahi hoti** — DB me sirf chhota reference (Telegram `chat_id` + `message_id` + `file_id`, ya URL) rehta hai, photo Telegram se load hoti hai aur `cache/` me rakhi jaati hai
 
-### 📦 Source Extract + Hosting Stop (naya)
-- `/source` — poora project **ZIP** me (main.py + plugins + config + docs)
-- `/source main` — sirf `main.py` · `/source list` — files list · `/source <filename>` — koi bhi file
+### 🛑 Hosting Stop (naya)
 - `/shutdown` — confirm button ke saath bot **gracefully band**: pending data save + shutdown backup + LOGGER_ID me notification, phir process exit
+
+### 🎨 Font + Design Kit (naya)
+- `/font list` — **17 fancy fonts** (smallcaps, bold, italic, script, fraktur, double-struck, mono, circled, tiny…)
+- `/font <style>` is chat ka font · `/font global <style>` sab chats (sudo) · `/font preview` · `/font off`
+- **Box design**: `╔══〔 ᴛɪᴛʟᴇ 〕══╗ … ┄┄┄┄┄ … 👑 ᴏᴡɴᴇʀ ▸ <naam> ╚══════╝`
+- Admin panel me **🎨 Font / Design** section — buttons se turant change + design ON/OFF
+
+### 🩺 Health / Heartbeat / Self-Heal (naya)
+- `/health` — connection, assistants, DB mode, RAM, disk, checks/heals/reconnects
+- `/heal` — turant self-heal (reconnect + flush + cleanup)
+- **Heartbeat** har `HEARTBEAT_MINUTES` (default 15) me admin + log group ko
+- Khud theek karta hai: bot/assistant reconnect, Firebase reconnect, DB flush, disk cleanup
+- **VC idle auto-leave**: VC me 1-2 min koi listener na ho to bot khud leave karta hai
+
+### 🎙️ Assistant Sessions — OTP Login (naya)
+- `/addsession` (bot DM me) → phone → **OTP** → (2FA) → session save → assistant **turant live**
+- Session database + Firebase me save · `/sessions` · `/delsession <name>` · jitne chahe accounts
+
+### 🍪 Cookies (admin se add — naya)
+- `/setcookies` — `cookies.txt` par reply ya text reply se cookies add (junk/dup auto-clean)
+- **Security**: cookie content DB/Firebase me nahi — sirf count/size/date ka meta
+
+### 📢 Force Join (naya)
+- `/forcejoin add @channel` · `remove` · `list` · `off`
+- Non-joined users ko join buttons + "✅ Maine join kar liya" verify button
+
+### 👑 Super Admin (naya)
+- `SUPER_ADMIN_IDS` (main file/env) — owner ke saath naye admins khud add kar sakta hai (`/addsudo`)
+- `/superadmin` — list + powers
 
 ### 🌍 Baaki
 - **13 languages** — ar, de, en, es, fr, hi, ja, my, pa, pt, ru, tr, zh (`/lang`)
@@ -215,7 +242,7 @@ koi data leak nahi.
 
 ---
 
-## 🕹️ Commands (77 total)
+## 🕹️ Commands (95 total)
 
 ### 🎵 Playback
 | Command | Description |
@@ -252,9 +279,13 @@ koi data leak nahi.
 | `/setimg` (reply/url) | sudo | Start image set (TG reference save, DB me image nahi) |
 | `/setimg stats` | sudo | Stats/alive ki image set |
 | `/setimg show\|remove` | sudo | Current dikhao / default par wapas |
-| `/source` | sudo | Poora project ZIP (main.py + plugins + docs) |
-| `/source main\|list\|<file>` | sudo | main.py / files list / koi bhi file |
 | `/shutdown` (confirm) | sudo | Save + backup + bot band (hosting stop) |
+| `/font list\|<style>\|global\|preview\|off` | user | 17 fonts + design ON/OFF |
+| `/forcejoin add\|remove\|list\|off` | sudo | Force join channel set |
+| `/health` `/heal` | sudo | Status / turant self-heal |
+| `/addsession` (DM) `/sessions` `/delsession` | sudo | OTP se assistant account add |
+| `/setcookies` `/cookies` | sudo | Cookies add + status |
+| `/superadmin` | sudo | Super admin list + powers |
 
 ### 🧩 Plugins & Misc
 `/plugins` `/plugin list|scan|reload|enable|disable <name>` `/maintenance on|off` `/start` `/help`
@@ -335,10 +366,15 @@ Music-x-bot/
 
 ---
 
-## 🩹 Latest Fixes (v3.1.1)
+## 🩹 Latest Fixes (v3.2.0)
 
 | Issue | Fix |
 | :--- | :--- |
+| `BrokenPipeError [Errno 32] Broken pipe` log spam | Network-blip noise log group me skip + **auto-heal reconnect** (`/health` me reconnects count) |
+| `/source` command | **Hata diya** (aapke kehne par) |
+| Default language | **English** (`LANG_CODE=en`) — per-chat `/lang` se badal sakte hain |
+| Kisi aur ki branding/links | Sab hata diye — apne `SUPPORT_CHANNEL`, `SUPPORT_CHAT`, `UPDATE_REPO`, `OWNER_NAME` env se set karein |
+| Start image/video | `/setimg` ab **photo aur video** dono leta hai — DB me sirf Telegram reference |
 | `/start`, `/help`, `/admin` crash: `Message.reply() got an unexpected keyword argument 'quote'` | Kurigram 2.2.26 me `quote` kwarg nahi hai — poore codebase se hata diya (build-level sanitizer, taaki aage bhi na aaye) |
 | Settings / maintenance / branding restart ke baad gayab | `_snapshot()` me `settings`, `maintenance`, `branding` keys add (pehle save hi nahi hote the) |
 | Toggle karne ke turant baad data loss | Admin panel + `/settings` me har toggle par `db.flush(force=True)` |

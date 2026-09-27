@@ -25,9 +25,29 @@
       • Image database me save NAHI hoti — DB me sirf Telegram reference
         (chat id + message id + file id) rehta hai, image TG se load hoti hai
 
-    📦 SOURCE EXTRACT  (admin poora code nikaal sakta hai)
-      • /source -> poora project ZIP, /source main -> main.py
-      • /source list -> files, /source <file> -> koi bhi file
+    🎨 FONT + DESIGN KIT
+      • /font [style|list|preview|off|global <style>] — 17 fancy fonts
+      • Box design (╔══〔 〕══╗) + small caps + owner footer
+      • Admin panel se bhi font/design change (buttons)
+
+    📢 FORCE JOIN
+      • /forcejoin add|remove|list|off — channel join zaroori
+      • Non-joined users ko join buttons + verify button milta hai
+
+    🩺 HEALTH / HEARTBEAT / SELF-HEAL / VC IDLE
+      • /health status, /heal turant fix, heartbeat admin+log group me
+      • Bot khud reconnect/flush/cleanup karta hai, VC khaali ho to 1-2 min me leave
+
+    🎙️ ASSISTANT SESSIONS (OTP LOGIN)
+      • /addsession -> phone + OTP + 2FA se koi bhi account add (jitne chahe)
+      • /sessions, /delsession <name> — sab database + Firebase me save
+
+    🍪 COOKIES (admin se add)
+      • /setcookies (file/text par reply), /cookies status
+      • Cookies sirf file me — DB/Firebase me sirf meta (count/size/date)
+
+    👑 SUPER ADMIN
+      • main .py me defined (SUPER_ADMIN_IDS) — naye admins khud add kar sakta hai
 
     🛑 HOSTING STOP
       • /shutdown (confirm button ke saath) -> save + backup + graceful exit
@@ -101,7 +121,6 @@ import sys
 import time
 import traceback
 import uuid
-import zipfile
 from collections import defaultdict, deque
 from contextlib import suppress
 from dataclasses import dataclass
@@ -131,7 +150,7 @@ import psutil
 import yt_dlp
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 from py_yt import Playlist, VideosSearch
-from pyrogram import Client, enums, errors, filters, types
+from pyrogram import Client, StopPropagation, enums, errors, filters, types
 from pyrogram import __version__ as pyrogram_version
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from pyrogram.errors import (
@@ -228,9 +247,16 @@ class TelegramLogHandler(logging.Handler):
         if self._task is None or self._task.done():
             self._task = loop.create_task(self._worker())
 
+    # Network blips (Broken pipe / connection reset) Pyrogram khud handle karta hai —
+    # inhe log group me spam nahi karte (health monitor reconnect karta hai).
+    NOISE = ("BrokenPipeError", "ConnectionResetError", "Broken pipe", "Timeout", "timed out")
+
     def emit(self, record: logging.LogRecord) -> None:  # noqa: D102
         try:
-            text = f"<b>⚠️ {record.levelname}</b>\n<code>{self.format(record)}</code>"
+            message = self.format(record)
+            if record.levelno <= logging.ERROR and any(noise in message for noise in self.NOISE):
+                return
+            text = f"<b>⚠️ {record.levelname}</b>\n<code>{message}</code>"
             self.buffer.append(text[:3500])
         except Exception:  # noqa: BLE001 - logging never raises
             pass
@@ -366,15 +392,45 @@ class Config:
         self.VC_WATCHER: int = self._bool("VC_WATCHER", True)
         self.NOWPLAYING_TIMER_BAR: bool = self._bool("NOWPLAYING_TIMER_BAR", True)
 
-        self.SUPPORT_CHANNEL: str = self._env("SUPPORT_CHANNEL", "https://t.me/fallenx")
-        self.SUPPORT_CHAT: str = self._env("SUPPORT_CHAT", "https://t.me/DevilsHeavenMF")
+        # NOTE: ye aapke apne links hain (kisi aur ke nahi) — .env me apne daalein
+        self.SUPPORT_CHANNEL: str = self._env("SUPPORT_CHANNEL", "https://t.me")
+        self.SUPPORT_CHAT: str = self._env("SUPPORT_CHAT", "https://t.me")
+        self.UPDATE_REPO: str = self._env("UPDATE_REPO", "https://github.com/pm169298-boop/Music-x-bot")
+
+        # ---- identity (branding — aapka apna) -------------------------------
+        self.BOT_NAME: str = self._env("BOT_NAME", "Music-x-bot")
+        self.OWNER_NAME: str = self._env("OWNER_NAME", "")
+        self.START_IMG: str = self._env("START_IMG", "")
+        self.PING_IMG: str = self._env("PING_IMG", "")
+
+        # ---- font / design --------------------------------------------------
+        self.FONT_ENABLED: bool = self._bool("FONT_ENABLED", True)
+        self.FONT_STYLE: str = self._env("FONT_STYLE", "smallcaps")
+        self.DESIGN_ENABLED: bool = self._bool("DESIGN_ENABLED", True)
+
+        # ---- force join -----------------------------------------------------
+        self.FORCE_JOIN: list[str] = self._list("FORCE_JOIN")
+
+        # ---- health / heartbeat / vc idle ------------------------------------
+        self.HEARTBEAT_MINUTES: int = self._int("HEARTBEAT_MINUTES", 15)
+        self.HEARTBEAT_TO_ADMIN: bool = self._bool("HEARTBEAT_TO_ADMIN", True)
+        self.AUTO_HEAL: bool = self._bool("AUTO_HEAL", True)
+        self.VC_IDLE_LEAVE: bool = self._bool("VC_IDLE_LEAVE", True)
+        self.VC_IDLE_SECONDS: int = self._int("VC_IDLE_SECONDS", 120)
+
+        # ---- super admins (main file me defined — more admins add kar sakte hain)
+        super_ids: list[int] = []
+        for value in self._list("SUPER_ADMIN_IDS") + [str(self.OWNER_ID)]:
+            with suppress(TypeError, ValueError):
+                uid = int(str(value).strip())
+                if uid and uid not in super_ids:
+                    super_ids.append(uid)
+        self.SUPER_ADMIN_IDS: list[int] = super_ids
         self.UPDATE_REPO: str = self._env("UPDATE_REPO", "https://github.com/pm169298-boop/Music-x-bot")
 
         self.DEFAULT_THUMB: str = self._env(
             "DEFAULT_THUMB", "https://te.legra.ph/file/3e40a408286d4eda24191.jpg"
         )
-        self.PING_IMG: str = self._env("PING_IMG", "https://files.catbox.moe/haagg2.png")
-        self.START_IMG: str = self._env("START_IMG", "https://files.catbox.moe/zvziwk.jpg")
 
         # ---- cookies ---------------------------------------------------------
         self.COOKIES_DIR: str = self._path("COOKIES_DIR", "cookies")
@@ -3842,6 +3898,21 @@ class Language:
                         await app.leave_chat(chat.id)
                     return
 
+                # ---- force join gate (sudo/owner bypass; private DM me bhi check) ----
+                gate = await force_join_gate(fallen)
+                if gate is not None:
+                    if isinstance(fallen, types.CallbackQuery):
+                        with suppress(Exception):
+                            await fallen.answer("Pehle force-join channel join karein!", show_alert=True)
+                        return
+                    with suppress(Exception):
+                        await fallen.reply_text(
+                            force_join_text(),
+                            reply_markup=gate,
+                            link_preview_options=types.LinkPreviewOptions(is_disabled=True),
+                        )
+                    return
+
                 lang_code = await db.get_lang(chat.id)
                 setattr(
                     fallen,
@@ -4206,7 +4277,7 @@ class Inline:
         return self.ikm(rows)
 
     def ping_markup(self, text: str) -> types.InlineKeyboardMarkup:
-        return self.ikm([[self.ikb(text=text, url=config.SUPPORT_CHAT)]])
+        return self.ikm([[self.ikb(text=text, url=config.SUPPORT_CHAT or "https://t.me")]])
 
     def play_queued(
         self, chat_id: int, item_id: str, _text: str
@@ -4289,7 +4360,7 @@ class Inline:
                 [
                     self.ikb(
                         text=lang["source"],
-                        url="https://github.com/AnonymousX1025/AnonXMusic",
+                        url=config.UPDATE_REPO,
                     )
                 ]
             ]
@@ -4853,6 +4924,10 @@ DEFAULT_DATA: dict[str, Any] = {
     "settings": {},
     "maintenance": False,
     "branding": {},
+    "sessions": [],
+    "force_join": [],
+    "cookies_meta": {},
+    "health": {},
 }
 
 
@@ -5055,6 +5130,12 @@ class HybridDatabase:
             },
             # Branding me sirf chhota reference rehta hai (image data kabhi DB me nahi)
             "branding": dict(self.data.get("branding", {}) or {}),
+            # ---- extra features (sab Firebase/local par save hote hain) ----
+            "sessions": list(self.data.get("sessions", []) or []),
+            "force_join": list(self.data.get("force_join", []) or []),
+            "cookies_meta": dict(self.data.get("cookies_meta", {}) or {}),
+            "health": dict(self.data.get("health", {}) or {}),
+            "fonts": dict(self.data.get("settings", {}).get("font_style") and {"global": self.data["settings"]["font_style"]} or {}),
         }
 
     def _apply(self, document: dict) -> None:
@@ -6898,9 +6979,10 @@ async def _permission_ok(client, message, *, owner: bool, sudo: bool, admin: boo
         return False, "🛠️ <b>Bot maintenance mode me hai.</b> Thodi der baad try karein."
 
     if owner:
-        if user_id == config.OWNER_ID:
+        supers = {int(config.OWNER_ID)} | {int(x) for x in config.SUPER_ADMIN_IDS}
+        if user_id in supers:
             return True, ""
-        return False, "⛔ Ye command sirf <b>bot owner</b> ke liye hai."
+        return False, "⛔ Ye command sirf <b>super admin / owner</b> ke liye hai."
 
     if sudo:
         if sudo_check(user_id):
@@ -7232,11 +7314,13 @@ async def start(_, message: types.Message):
     )
 
     key = buttons.start_key(message.lang, private)
-    await message.reply_photo(
-        photo=branding_image("start"),
-        caption=_text,
-        reply_markup=key,
-    )
+    art, kind = branding_media("start")
+    if art and kind == "video":
+        await message.reply_video(video=art, caption=_text, reply_markup=key)
+    elif art:
+        await message.reply_photo(photo=art, caption=_text, reply_markup=key)
+    else:
+        await message.reply_text(_text, reply_markup=key)
 
     if private:
         if await db.is_user(message.from_user.id):
@@ -8220,10 +8304,13 @@ from pytgcalls import __version__ as pytgver
 @app.on_message(filters.command(["stats"]) & filters.group & ~app.bl_users)
 @lang.language()
 async def _stats(_, m: types.Message):
-    sent = await m.reply_photo(
-        photo=branding_image("stats"),
-        caption=m.lang["stats_fetching"],
-    )
+    art, kind = branding_media("stats")
+    if art and kind == "video":
+        sent = await m.reply_video(video=art, caption=m.lang["stats_fetching"])
+    elif art:
+        sent = await m.reply_photo(photo=art, caption=m.lang["stats_fetching"])
+    else:
+        sent = await m.reply_text(m.lang["stats_fetching"])
 
     pid = os.getpid()
     _utext = m.lang["stats_user"].format(
@@ -8252,13 +8339,23 @@ async def _stats(_, m: types.Message):
             pyrogram_version,
             pytgver,
         )
-    await sent.edit_caption(_utext)
+    with suppress(Exception):
+        if art:
+            await sent.edit_caption(_utext)
+        else:
+            raise ValueError("no media")
+    if not art:
+        with suppress(Exception):
+            await sent.edit_text(_utext)
 
 
 # ==============================================================================
 # SECTION: BUILT-IN PLUGIN: sudoers
 # ==============================================================================
-@app.on_message(filters.command(["addsudo", "delsudo", "rmsudo"]) & filters.user(app.owner))
+@app.on_message(
+    filters.command(["addsudo", "delsudo", "rmsudo"])
+    & filters.user(sorted({int(config.OWNER_ID), *[int(x) for x in config.SUPER_ADMIN_IDS]}))
+)
 @lang.language()
 async def _sudo(_, m: types.Message):
     user = await utils.extract_user(m)
@@ -8686,6 +8783,11 @@ ADMIN_PANEL_SUDO_ONLY: frozenset[str] = frozenset(
         "maint",
         "logs",
         "logfile",
+        "fonts",
+        "health",
+        "forcejoin",
+        "cookies",
+        "sessions",
     }
 )
 
@@ -8734,6 +8836,19 @@ def admin_panel_markup(
                 ikb(text="🗄 DB status", callback_data="admpanel db"),
                 ikb(text="⬆️ Push", callback_data="admpanel push"),
                 ikb(text="⬇️ Pull", callback_data="admpanel pull"),
+            ]
+        )
+        rows.append(
+            [
+                ikb(text="🎨 Font / Design", callback_data="admpanel fonts"),
+                ikb(text="🩺 Health", callback_data="admpanel health"),
+            ]
+        )
+        rows.append(
+            [
+                ikb(text="📢 Force Join", callback_data="admpanel forcejoin"),
+                ikb(text="🍪 Cookies", callback_data="admpanel cookies"),
+                ikb(text="🎙️ Sessions", callback_data="admpanel sessions"),
             ]
         )
         rows.append(
@@ -8829,6 +8944,10 @@ async def admin_panel_section(
     Toggle wale sections (playmode / auto-delete / maintenance) yahi side-effect karte hain.
     """
     lang_obj = lang_obj or {}
+    # naye sections (fonts / health / force join / cookies / sessions)
+    extra = await admin_panel_extra_sections(section, chat_id, is_sudo, in_group)
+    if extra is not None:
+        return extra
     back = [[buttons.ikb(text="🔙 Back", callback_data="admpanel home")]]
     markup = lambda: buttons.ikm(back)  # noqa: E731
 
@@ -9165,6 +9284,10 @@ BRANDING_FILES = {
     "start": "branding_start.jpg",
     "stats": "branding_stats.jpg",
 }
+BRANDING_VIDEO_FILES = {
+    "start": "branding_start.mp4",
+    "stats": "branding_stats.mp4",
+}
 
 
 def branding_data() -> dict:
@@ -9185,6 +9308,10 @@ def branding_ref(slot: str = "start") -> Optional[dict]:
 
 
 def branding_cache_path(slot: str) -> Path:
+    """Cache path — video set hone par .mp4, warna .jpg."""
+    ref = branding_ref(slot) or {}
+    if str(ref.get("media", "photo")) == "video":
+        return Path(config.CACHE_DIR) / BRANDING_VIDEO_FILES.get(slot, "branding.mp4")
     return Path(config.CACHE_DIR) / BRANDING_FILES.get(slot, "branding.jpg")
 
 
@@ -9304,8 +9431,11 @@ async def _setimg_cmd(_, m: types.Message):
         ref = branding_ref(slot)
         if not ref:
             return await m.reply_text(branding_status_text())
-        got = await branding_load(slot) or str(branding_ref_any_default(slot))
+        got, kind = branding_media(slot)
+        got = got or await branding_load(slot) or branding_ref_any_default(slot)
         with suppress(Exception):
+            if kind == "video":
+                return await m.reply_video(video=got, caption=branding_status_text())
             return await m.reply_photo(photo=got, caption=branding_status_text())
         return await m.reply_text(branding_status_text())
 
@@ -9345,13 +9475,25 @@ async def _setimg_cmd(_, m: types.Message):
     else:
         media_msg = m.reply_to_message
         file_id = None
+        media_kind = "photo"
         with suppress(Exception):
-            file_id = media_msg.photo.file_id if media_msg.photo else media_msg.document.file_id
+            if media_msg.video:
+                file_id, media_kind = media_msg.video.file_id, "video"
+            elif media_msg.animation:
+                file_id, media_kind = media_msg.animation.file_id, "video"
+            elif media_msg.photo:
+                file_id, media_kind = media_msg.photo.file_id, "photo"
+            elif media_msg.document:
+                file_id = media_msg.document.file_id
+                media_kind = "video" if str(media_msg.document.file_name or "").lower().endswith(
+                    (".mp4", ".mkv", ".webm", ".mov")
+                ) else "photo"
         if not file_id:
-            return await sent.edit_text("❌ Photo/document ka file id nahi mila, dobara try karein.")
+            return await sent.edit_text("❌ Photo/video ka file id nahi mila, dobara try karein.")
         ref = {
             "type": "file_id",
-            "value": file_id,              # chhota reference — image DB me nahi
+            "value": file_id,              # chhota reference — media DB me nahi
+            "media": media_kind,           # photo ya video
             "chat_id": media_msg.chat.id,  # TG chat id (jahan se load hoga)
             "message_id": media_msg.id,    # TG message id (backup reference)
             "set_by": m.from_user.id,
@@ -9383,120 +9525,27 @@ def branding_ref_any_default(slot: str) -> str:
     return config.START_IMG if slot == "start" else config.PING_IMG
 
 
+def branding_media(slot: str = "start") -> tuple[str, str]:
+    """
+    (path, kind) return karta hai — kind = "photo" | "video" | "none".
+    Admin photo ya video dono set kar sakta hai (start/stats ke liye).
+    """
+    ref = branding_ref(slot)
+    path = branding_cache_path(slot)
+    if ref and path.exists() and path.stat().st_size > 0:
+        return str(path), ("video" if str(ref.get("media", "photo")) == "video" else "photo")
+    default = config.START_IMG if slot == "start" else config.PING_IMG
+    if default:
+        return str(default), ("video" if str(default).lower().endswith((".mp4", ".mkv", ".webm")) else "photo")
+    return "", "none"
+
+
 def branding_image(slot: str = "start") -> str:
     """Start/stats handlers ke liye image (custom ho to cache path, warna config default)."""
     path = branding_cache_path(slot)
     if branding_ref(slot) and path.exists() and path.stat().st_size > 0:
         return str(path)
     return config.START_IMG if slot == "start" else config.PING_IMG
-
-
-# ==============================================================================
-# SECTION: SOURCE EXTRACT  (/source — admin poora code nikaal sakta hai)
-# ==============================================================================
-SOURCE_EXCLUDE_DIRS = {"data", "cache", "downloads", ".git", "__pycache__", ".venv", "venv"}
-SOURCE_EXTRA_HINT = (
-    "💡 <b>Options:</b>\n"
-    "<code>/source</code> — poora project ZIP\n"
-    "<code>/source main</code> — sirf main.py\n"
-    "<code>/source list</code> — files ki list\n"
-    "<code>/source &lt;filename&gt;</code> — koi bhi file (e.g. <code>/source requirements.txt</code>)"
-)
-
-
-def source_root() -> Path:
-    return Path(__file__).resolve().parent
-
-
-def source_files() -> list[Path]:
-    root = source_root()
-    files: list[Path] = []
-    for path in sorted(root.rglob("*")):
-        if not path.is_file():
-            continue
-        rel = path.relative_to(root)
-        if any(part in SOURCE_EXCLUDE_DIRS for part in rel.parts):
-            continue
-        if rel.suffix in {".pyc", ".session", ".log"} or rel.name in {"log.txt", ".env"}:
-            continue
-        files.append(path)
-    return files
-
-
-def source_zip(dest: Optional[Path] = None) -> Optional[Path]:
-    """Poora source ek zip me — cache/ me banta hai (repo me kuch nahi likha jaata)."""
-    files = source_files()
-    if not files:
-        return None
-    dest = dest or (Path(config.CACHE_DIR) / f"{BOT_DISPLAY_NAME}-source.zip")
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    root = source_root()
-    with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
-        for path in files:
-            with suppress(Exception):
-                zf.write(path, arcname=str(Path(BOT_DISPLAY_NAME) / path.relative_to(root)))
-    return dest
-
-
-@app.on_message(filters.command(["source", "extract", "codes", "getcode"]) & app.sudoers)
-@lang.language()
-async def _source_cmd(_, m: types.Message):
-    args = [a for a in m.command[1:]]
-    root = source_root()
-    sent = await m.reply_text("📦 <b>Source nikaal rahe hain...</b>")
-
-    if not args:
-        path = await asyncio.to_thread(source_zip)
-        if not path:
-            return await sent.edit_text("❌ Source files nahi mili.")
-        size = fmt_bytes(path.stat().st_size)
-        await sent.delete()
-        await m.reply_document(
-            document=str(path),
-            caption=(
-                f"📦 <b>{escape(BOT_DISPLAY_NAME)} — poora source code</b>\n"
-                f"🧾 <b>Files:</b> <code>{len(source_files())}</code> | 💾 <code>{size}</code>\n"
-                f"⚙️ <b>Version:</b> <code>v{__version__}</code>\n\n"
-                + SOURCE_EXTRA_HINT
-            ),
-        )
-        return
-
-    target = args[0].lower()
-    if target in {"list", "ls", "files"}:
-        files = source_files()
-        lines = [f"📂 <b>Source files ({len(files)})</b>\n"]
-        for path in files[:120]:
-            lines.append(f"• <code>{escape(str(path.relative_to(root)))}</code>")
-        if len(files) > 120:
-            lines.append(f"… +{len(files) - 120} more")
-        for chunk in split_text("\n".join(lines)):
-            await m.reply_text(chunk)
-        return await sent.delete()
-
-    if target in {"main", "main.py"}:
-        main_file = root / "main.py"
-        await sent.delete()
-        await m.reply_document(
-            document=str(main_file),
-            caption=(
-                f"📄 <b>main.py</b> — <code>v{__version__}</code> "
-                f"({fmt_bytes(main_file.stat().st_size)}, {len(open(main_file, encoding='utf-8').readlines())} lines)\n\n"
-                + SOURCE_EXTRA_HINT
-            ),
-        )
-        return
-
-    for name in args:
-        candidate = (root / name).resolve()
-        if root not in candidate.parents and candidate != root:
-            return await sent.edit_text("🚫 Sirf project folder ki files mil sakti hain.")
-        if candidate.is_file():
-            await sent.delete()
-            await m.reply_document(document=str(candidate), caption=f"📄 <code>{escape(str(name))}</code>")
-            return
-
-    await sent.edit_text("❌ File nahi mili.\n\n" + SOURCE_EXTRA_HINT)
 
 
 # ==============================================================================
@@ -9567,6 +9616,1402 @@ async def _shutdown_cb(_, query: types.CallbackQuery):
     with suppress(Exception):
         await query.edit_message_text("🛑 <b>Bot band ho raha hai</b> — save + backup ke baad process exit.")
     asyncio.create_task(perform_shutdown(f"manual by {query.from_user.id}"))
+
+
+# ==============================================================================
+# SECTION: FONT + DESIGN KIT  (fancy unicode fonts + box design)
+# ==============================================================================
+# Design sample jo use hota hai:
+#
+#   ╔══〔 📞 ɴᴜᴍʙᴇʀ ɪɴꜰᴏ ᴠ𝟸 〕══╗
+#     🔎 ǫᴜᴇʀʏ ▸ 8825261179
+#     ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+#     👑 ᴏᴡɴᴇʀ ▸ SR DARK
+#   ╚══════════════════════════╝
+#
+# Font admin panel se ya `/font` command se change hota hai (per-chat ya global).
+# ==============================================================================
+
+def _seq(start: int, count: int) -> str:
+    """Codepoint sequence se letters banao (unicode blocks linear hote hain)."""
+    return "".join(chr(start + i) for i in range(count))
+
+
+_ALPHA_LOWER = "abcdefghijklmnopqrstuvwxyz"
+_ALPHA_UPPER = _ALPHA_LOWER.upper()
+_DIGITS = "0123456789"
+
+# har style: (lower, upper, digits) — khaali string = us case ka glyph nahi hai
+_RAW_STYLES: dict[str, tuple[str, str, str]] = {
+    "smallcaps": (
+        "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀꜱᴛᴜᴠᴡ×ʏᴢ",
+        "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀꜱᴛᴜᴠᴡ×ʏᴢ",  # design jaisa: uppercase bhi small-caps
+        "𝟢𝟣𝟤𝟥𝟦𝟧𝟨𝟩𝟪𝟫",
+    ),
+    "bold": (_seq(0x1D41A, 26), _seq(0x1D400, 26), _seq(0x1D7CE, 10)),
+    "bold_sans": (_seq(0x1D5EE, 26), _seq(0x1D5D4, 26), _seq(0x1D7EC, 10)),
+    "italic": (_seq(0x1D44E, 26), _seq(0x1D434, 26), _seq(0x1D7CE, 10)),
+    "bold_italic": (_seq(0x1D482, 26), _seq(0x1D468, 26), _seq(0x1D7CE, 10)),
+    "script": (_seq(0x1D4B6, 26), "𝒜ℬ𝒞𝒟ℰℱ𝒢ℋℐ𝒥𝒦ℒℳ𝒩𝒪𝒫𝒬ℛ𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵", _seq(0x1D7CE, 10)),
+    "bold_script": (_seq(0x1D4EA, 26), _seq(0x1D4D0, 26), _seq(0x1D7CE, 10)),
+    "fraktur": (_seq(0x1D51E, 26), "𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ", _seq(0x1D7CE, 10)),
+    "bold_fraktur": (_seq(0x1D586, 26), _seq(0x1D56C, 26), _seq(0x1D7CE, 10)),
+    "double": (_seq(0x1D552, 26), "𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ", _seq(0x1D7D8, 10)),
+    "mono": (_seq(0x1D68A, 26), _seq(0x1D670, 26), _seq(0x1D7F6, 10)),
+    "fullwidth": (_seq(0xFF41, 26), _seq(0xFF21, 26), _seq(0xFF10, 10)),
+    "circled": (_seq(0x24D0, 26), _seq(0x24B6, 26), _seq(0x2460, 10)),
+    "neg_circled": ("", _seq(0x1F150, 26), "❶❷❸❹❺❻❼❽❾❿"),
+    "parenthesized": (_seq(0x249C, 26), "", _seq(0x2474, 10)),
+    "tiny": (
+        "ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖ𐞥ʳˢᵗᵘᵛʷˣʸᶻ",
+        "ᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾQᴿˢᵀᵁⱽᵂˣʸᶻ",
+        "⁰¹²³⁴⁵⁶⁷⁸⁹",
+    ),
+    "neg_squared": ("", _seq(0x1F170, 26), _seq(0x1F170, 0) or ""),
+}
+
+FONT_STYLES: dict[str, dict[str, str]] = {}
+for _name, (_low, _up, _dig) in _RAW_STYLES.items():
+    table: dict[str, str] = {}
+    if len(_low) == 26:
+        table.update(zip(_ALPHA_LOWER, _low))
+    if len(_up) == 26:
+        table.update(zip(_ALPHA_UPPER, _up))
+    if len(_dig) == 10:
+        table.update(zip(_DIGITS, _dig))
+    FONT_STYLES[_name] = {
+        "table": table,
+        "label": _name.replace("_", " ").title(),
+        "sample": "".join(
+            table.get(ch, ch) for ch in "music x bot 2"
+        ),
+    }
+
+FONT_STYLE_NAMES: tuple[str, ...] = tuple(FONT_STYLES)
+DEFAULT_FONT_STYLE = "smallcaps"
+DESIGN_FONT_KEYS = frozenset({"font_style", "design"})
+
+
+def ftext(text: Any, style: Optional[str] = None, chat_id: Optional[int] = None) -> str:
+    """Text ko fancy font me convert karo (per-chat style, warna global default)."""
+    if not text:
+        return ""
+    style = style or font_for(chat_id)
+    if style in {"off", "none", "plain", "normal"}:
+        return str(text)
+    table = FONT_STYLES.get(style, FONT_STYLES[DEFAULT_FONT_STYLE])["table"]
+    return "".join(table.get(ch, ch) for ch in str(text))
+
+
+def font_for(chat_id: Optional[int] = None) -> str:
+    """Chat ka font style (chat-meta -> global setting -> config default)."""
+    if chat_id:
+        meta = (db.data.get("chat_meta", {}) or {}).get(str(chat_id), {}) or {}
+        if meta.get("font_style"):
+            return str(meta["font_style"])
+    settings = db.data.get("settings", {}) or {}
+    if settings.get("font_style"):
+        return str(settings["font_style"])
+    if not getattr(config, "FONT_ENABLED", True):
+        return "off"
+    return getattr(config, "FONT_STYLE", DEFAULT_FONT_STYLE) or DEFAULT_FONT_STYLE
+
+
+def set_font(style: str, chat_id: Optional[int] = None) -> str:
+    """Font set karo (chat_id None -> global default) — DB me save + Firebase sync."""
+    style = (style or "").lower().replace(" ", "_")
+    if style not in FONT_STYLES and style not in {"off", "none", "plain", "normal"}:
+        return ""
+    if chat_id:
+        meta = db.data.setdefault("chat_meta", {}).setdefault(str(chat_id), {})
+        meta["font_style"] = style
+    else:
+        db.data.setdefault("settings", {})["font_style"] = style
+        db.data["settings"]["font"] = style
+    db.mark_dirty()
+    return style
+
+
+def font_enabled(chat_id: Optional[int] = None) -> bool:
+    style = font_for(chat_id)
+    return style not in {"off", "none", "plain", "normal"}
+
+
+def design_on(chat_id: Optional[int] = None) -> bool:
+    """Box design ON/OFF (per-chat, default ON)."""
+    if chat_id:
+        meta = (db.data.get("chat_meta", {}) or {}).get(str(chat_id), {}) or {}
+        if "design" in meta:
+            return bool(meta["design"])
+    return bool((db.data.get("settings", {}) or {}).get("design", True))
+
+
+def toggle_design(chat_id: Optional[int] = None) -> bool:
+    """Design toggle karo aur naya value return karo."""
+    if chat_id:
+        meta = db.data.setdefault("chat_meta", {}).setdefault(str(chat_id), {})
+        meta["design"] = not design_on(chat_id)
+        db.mark_dirty()
+        return bool(meta["design"])
+    settings = db.data.setdefault("settings", {})
+    settings["design"] = not bool(settings.get("design", True))
+    db.mark_dirty()
+    return bool(settings["design"])
+
+
+DIVIDER = "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
+
+
+def divider(width: int = 19) -> str:
+    return "┄" * max(6, int(width))
+
+
+def kv(icon: str, label: str, value: Any, chat_id: Optional[int] = None, style: Optional[str] = None) -> str:
+    """`  🔎 ǫᴜᴇʀʏ ▸ value` line."""
+    if not design_on(chat_id):
+        return f"  {icon} <b>{label}</b> ▸ <code>{value}</code>" if icon else f"  <b>{label}</b> ▸ <code>{value}</code>"
+    styled = ftext(label, style, chat_id)
+    return f"  {icon} <b>{styled}</b> ▸ {value}"
+
+
+def frame(
+    title: str,
+    lines: list[str],
+    footer: Optional[str] = None,
+    chat_id: Optional[int] = None,
+    style: Optional[str] = None,
+) -> str:
+    """
+    Design frame:
+      ╔══〔 📞 ᴛɪᴛʟᴇ 〕══╗
+        ...lines...
+        ┄┄┄┄┄┄┄
+        👑 ᴏᴡɴᴇʀ ▸ <footer>
+      ╚════════════════════╝
+    """
+    style = style or font_for(chat_id)
+    if not design_on(chat_id):
+        body = "\n".join(lines)
+        return f"<b>{title}</b>\n\n{body}" + (f"\n\n{footer}" if footer else "")
+
+    f_title = ftext(title, style, chat_id)
+    head = f"╔══〔 {f_title} 〕══╗"
+    body = "\n".join(lines)
+    tail_lines = [f"  {divider()}"]
+    if footer:
+        tail_lines.append(f"  {footer}")
+    tail = "\n".join(tail_lines)
+    width = max(
+        22,
+        len(f"╚{'═' * (len(head) - 2)}╝") - 2,
+    )
+    bottom = "╚" + "═" * width + "╝"
+    return f"{head}\n\n  {body}\n\n{tail}\n\n{bottom}"
+
+
+def owner_footer(chat_id: Optional[int] = None) -> str:
+    """Design ke footer me owner ka naam (config se, kisi aur ka nahi)."""
+    name = getattr(config, "OWNER_NAME", "") or "OWNER"
+    icon = "👑"
+    return f"{icon} {ftext('owner', chat_id=chat_id)} ▸ <b>{escape(str(name))}</b>"
+
+
+def brand_footer(chat_id: Optional[int] = None) -> str:
+    return f"🎵 <b>{escape(str(getattr(config, 'BOT_NAME', BOT_DISPLAY_NAME)))}</b>"
+
+
+def design_header(title: str, icon: str = "🎵", chat_id: Optional[int] = None) -> str:
+    """Chhota header (frame ke bina)."""
+    return f"╔══〔 {icon} {ftext(title, chat_id=chat_id)} 〕══╗"
+
+
+@app.on_message(filters.command(["font", "fonts", "design"]) & ~app.bl_users)
+@lang.language()
+async def _font_cmd(_, m: types.Message):
+    args = [a.lower() for a in m.command[1:]]
+    chat_id = m.chat.id
+
+    if not args or args[0] in {"list", "styles", "help"}:
+        text = frame(
+            "ꜰᴏɴᴛ ꜱᴛʏʟᴇꜱ",
+            [
+                f"  ▸ <code>{name}</code> — {info['sample']}"
+                for name, info in FONT_STYLES.items()
+            ]
+            + [
+                "  ▸ <code>off</code> — simple text (font band)",
+            ],
+            footer=owner_footer(chat_id),
+            chat_id=chat_id,
+        )
+        text += (
+            "\n\n<b>Usage:</b>\n"
+            "• <code>/font bold_sans</code> — is chat ka font\n"
+            "• <code>/font off</code> — font band\n"
+            "• <code>/font global mono</code> — sab jagah ke liye (sudo)\n"
+            "• <code>/font preview bold</code> — preview dekho"
+        )
+        return await m.reply_text(text, link_preview_options=types.LinkPreviewOptions(is_disabled=True))
+
+    target_global = args[0] == "global"
+    if target_global:
+        if m.from_user.id not in app.sudoers:
+            return await m.reply_text("⛔ Global font sirf sudo/owner badal sakta hai.")
+        args = args[1:]
+        if not args:
+            return await m.reply_text("⚠️ Style bhi bhejein: <code>/font global bold_sans</code>")
+
+    if args[0] == "preview":
+        style = args[1] if len(args) > 1 else font_for(chat_id)
+        sample = frame(
+            "ᴘʀᴇᴠɪᴇᴡ",
+            [
+                kv("🎧", "now playing", ftext("Tum Hi Ho", style), chat_id, style),
+                kv("⏱️", "duration", "03:45", chat_id, style),
+                kv("👤", "requested by", "Admin", chat_id, style),
+            ],
+            footer=owner_footer(chat_id),
+            chat_id=chat_id,
+            style=style,
+        )
+        return await m.reply_text(sample, reply_markup=font_markup(style), link_preview_options=types.LinkPreviewOptions(is_disabled=True))
+
+    style = set_font(args[0], None if target_global else chat_id)
+    if not style:
+        return await m.reply_text(
+            f"❌ Ye style nahi hai. <code>/font list</code> se dekhein.\n"
+            f"Available: <code>{', '.join(FONT_STYLE_NAMES)}</code>"
+        )
+
+    await db.flush(force=True)
+    where = "sab chats (global)" if target_global else "is chat"
+    await m.reply_text(
+        frame(
+            "ꜰᴏɴᴛ ᴜᴘᴅᴀᴛᴇᴅ",
+            [
+                kv("🎨", "style", f"<code>{style}</code>"),
+                kv("📍", "applied", where),
+                kv("📅", "saved", "database + Firebase ✅"),
+            ],
+            footer=owner_footer(chat_id),
+            chat_id=chat_id,
+        ),
+        reply_markup=font_markup(style),
+        link_preview_options=types.LinkPreviewOptions(is_disabled=True),
+    )
+
+
+def font_markup(current: Optional[str] = None, chat_id: Optional[int] = None) -> types.InlineKeyboardMarkup:
+    """Font styles ke buttons (2 per row) + design toggle."""
+    current = current or font_for(chat_id)
+    names = list(FONT_STYLE_NAMES)
+    rows: list[list] = []
+    row: list = []
+    for name in names:
+        mark = "✅ " if name == current else ""
+        row.append(buttons.ikb(text=f"{mark}{name}", callback_data=f"fontset {name}"))
+        if len(row) == 2:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    rows.append([buttons.ikb(text=("🧩 Design: ON ✅" if design_on(chat_id) else "🧩 Design: OFF ❌"), callback_data="fontset design_toggle")])
+    rows.append([buttons.ikb(text="🎨 Off (simple)", callback_data="fontset off")])
+    return buttons.ikm(rows)
+
+
+@app.on_callback_query(filters.regex("^fontset") & ~app.bl_users)
+@lang.language()
+async def _font_cb(_, query: types.CallbackQuery):
+    args = query.data.split()
+    value = args[1] if len(args) > 1 else ""
+    chat_id = query.message.chat.id
+
+    if value == "design_toggle":
+        state = toggle_design(chat_id)
+        await db.flush(force=True)
+        return await query.answer(f"Design {'ON ✅' if state else 'OFF ❌'}", show_alert=True)
+
+    if value == "off":
+        set_font("off", chat_id)
+        await db.flush(force=True)
+        return await query.edit_message_text("🎨 Font band kar diya — ab simple text use hoga.")
+
+    style = set_font(value, chat_id)
+    if not style:
+        return await query.answer("❌ Ye style nahi mila.", show_alert=True)
+    await db.flush(force=True)
+    await query.answer(f"Font: {style}", show_alert=True)
+    sample = frame(
+        "ꜰᴏɴᴛ ᴜᴘᴅᴀᴛᴇᴅ",
+        [
+            kv("🎨", "style", f"<code>{style}</code>"),
+            kv("📍", "chat", f"<code>{chat_id}</code>"),
+        ],
+        footer=owner_footer(chat_id),
+        chat_id=chat_id,
+    )
+    with suppress(Exception):
+        return await query.edit_message_text(sample, reply_markup=font_markup(style, chat_id))
+    await query.edit_message_text(sample)
+
+
+# ==============================================================================
+# SECTION: FORCE JOIN  (channel/group join zaroori — admin se set)
+# ==============================================================================
+FORCE_JOIN_CACHE: dict[int, float] = {}
+FORCE_JOIN_CACHE_TTL = 6 * 3600
+
+
+def force_join_channels() -> list[str]:
+    """DB + env se force-join channels (order maintained)."""
+    channels: list[str] = []
+    for item in list(db.data.get("force_join", []) or []) + list(config.FORCE_JOIN or []):
+        value = str(item).strip()
+        if value and value not in channels:
+            channels.append(value)
+    return channels
+
+
+def _force_join_link(channel: str) -> str:
+    value = channel.strip()
+    if value.startswith("http"):
+        return value
+    value = value.lstrip("@")
+    if value.startswith("+") or value.startswith("joinchat"):
+        return f"https://t.me/{value}"
+    if re.fullmatch(r"-?\d+", value):
+        return f"https://t.me/c/{value.lstrip('-')}"
+    return f"https://t.me/{value}"
+
+
+def force_join_markup(channels: Optional[list[str]] = None) -> types.InlineKeyboardMarkup:
+    channels = channels or force_join_channels()
+    rows = [[buttons.ikb(text=f"📢 Join {i + 1}", url=_force_join_link(ch))] for i, ch in enumerate(channels)]
+    rows.append([buttons.ikb(text="✅ Maine join kar liya", callback_data="fjoin check")])
+    return buttons.ikm(rows)
+
+
+def force_join_text(channels: Optional[list[str]] = None) -> str:
+    channels = channels or force_join_channels()
+    lines = [kv("📢", "channel", f"<code>{escape(ch)}</code>") for ch in channels]
+    return frame(
+        "ꜰᴏʀᴄᴇ ᴊᴏɪɴ",
+        [
+            "  <b>Pehle neeche wale channel/group join karein</b> — phir bot use karein.",
+            "",
+            *lines,
+        ],
+        footer=owner_footer(),
+    ) + "\n\n🗑 <i>Message auto-delete ho jayega (5m)</i>"
+
+
+async def force_join_gate(update: Any) -> Optional[types.InlineKeyboardMarkup]:
+    """
+    None = allowed. Warna join-markup (caller ko bhejna hai).
+    Sudo/owner, private-DM aur cache me verified users bypass karte hain.
+    """
+    channels = force_join_channels()
+    if not channels:
+        return None
+
+    user = getattr(update, "from_user", None)
+    user_id = getattr(user, "id", 0) or 0
+    if not user_id or user_id in app.sudoers:
+        return None
+    if time.time() - FORCE_JOIN_CACHE.get(user_id, 0) < FORCE_JOIN_CACHE_TTL:
+        return None
+
+    for channel in channels:
+        with suppress(Exception):
+            member = await app.get_chat_member(channel, user_id)
+            if member.status in {
+                enums.ChatMemberStatus.BANNED,
+                enums.ChatMemberStatus.LEFT,
+            }:
+                return force_join_markup(channels)
+    FORCE_JOIN_CACHE[user_id] = time.time()
+    return None
+
+
+@app.on_callback_query(filters.regex("^fjoin") & ~app.bl_users)
+@lang.language()
+async def _force_join_cb(_, query: types.CallbackQuery):
+    channels = force_join_channels()
+    user_id = query.from_user.id
+    for channel in channels:
+        try:
+            member = await app.get_chat_member(channel, user_id)
+            if member.status in {enums.ChatMemberStatus.BANNED, enums.ChatMemberStatus.LEFT}:
+                return await query.answer("❌ Abhi bhi join nahi kiya — pehle join karein!", show_alert=True)
+        except Exception as exc:  # noqa: BLE001
+            return await query.answer(f"⚠️ Check fail: {exc}", show_alert=True)
+
+    FORCE_JOIN_CACHE[user_id] = time.time()
+    await query.answer("✅ Verified! Ab bot use kar sakte hain.", show_alert=True)
+    with suppress(Exception):
+        await query.message.delete()
+
+
+@app.on_message(filters.command(["forcejoin", "fjoin", "forcejoinchannel"]) & app.sudoers)
+@lang.language()
+async def _force_join_cmd(_, m: types.Message):
+    args = [a for a in m.command[1:]]
+    chat_id = m.chat.id
+    if not args or args[0].lower() in {"list", "show", "status"}:
+        channels = force_join_channels()
+        text = frame(
+            "ꜰᴏʀᴄᴇ ᴊᴏɪɴ ꜱᴇᴛᴛɪɴɢꜱ",
+            (
+                [kv("📢", f"channel {i + 1}", f"<code>{escape(ch)}</code>") for i, ch in enumerate(channels)]
+                or ["  <i>Koi force-join channel set nahi hai.</i>"]
+            ),
+            footer=owner_footer(chat_id),
+            chat_id=chat_id,
+        )
+        text += (
+            "\n\n<b>Usage:</b>\n"
+            "• <code>/forcejoin add @mychannel</code>\n"
+            "• <code>/forcejoin add https://t.me/mychannel</code>\n"
+            "• <code>/forcejoin remove @mychannel</code>\n"
+            "• <code>/forcejoin off</code> — sab hata do"
+        )
+        return await m.reply_text(text, reply_markup=force_join_markup(channels) if channels else None, link_preview_options=types.LinkPreviewOptions(is_disabled=True))
+
+    action = args[0].lower()
+    store: list = list(db.data.get("force_join", []) or [])
+
+    if action in {"off", "disable", "clear", "reset"}:
+        db.data["force_join"] = []
+        db.data.setdefault("settings", {})["force_join"] = []
+        db.mark_dirty()
+        await db.flush(force=True)
+        return await m.reply_text("🧹 Force-join band kar diya (sab channels hata diye).")
+
+    if len(args) < 2:
+        return await m.reply_text("⚠️ Channel bhi bhejein: <code>/forcejoin add @channel</code>")
+
+    target = args[1].strip()
+    if action in {"add", "set", "+"}:
+        if target not in store:
+            store.append(target)
+        db.data["force_join"] = store
+        db.data.setdefault("settings", {})["force_join"] = store
+        db.mark_dirty()
+        await db.flush(force=True)
+        # bot ko us channel me admin hona chahiye (check + warn)
+        warn = ""
+        with suppress(Exception):
+            member = await app.get_chat_member(target, app.id)
+            if member.status not in {enums.ChatMemberStatus.ADMINISTRATOR, enums.ChatMemberStatus.OWNER}:
+                warn = "\n⚠️ <b>Bot wahan admin nahi hai</b> — membership check fail hoga, admin banayein."
+        return await m.reply_text(
+            frame(
+                "ꜰᴏʀᴄᴇ ᴊᴏɪɴ ᴀᴅᴅᴇᴅ",
+                [kv("📢", "channel", f"<code>{escape(target)}</code>"), kv("📊", "total", f"<code>{len(store)}</code>")],
+                footer=owner_footer(chat_id),
+                chat_id=chat_id,
+            ) + warn,
+            link_preview_options=types.LinkPreviewOptions(is_disabled=True),
+        )
+
+    if action in {"remove", "del", "delete", "-"}:
+        if target in store:
+            store.remove(target)
+            db.data["force_join"] = store
+            db.data.setdefault("settings", {})["force_join"] = store
+            db.mark_dirty()
+            await db.flush(force=True)
+            return await m.reply_text(f"✅ <code>{escape(target)}</code> hata diya. Bache: <code>{len(store)}</code>")
+        return await m.reply_text("❌ Ye channel list me nahi hai.")
+
+    await m.reply_text("⚠️ Usage: <code>/forcejoin add|remove|list|off</code>")
+
+
+# ==============================================================================
+# SECTION: COOKIES  (admin/sudo se add — file ya text, DB me sirf meta)
+# ==============================================================================
+def cookies_meta() -> dict:
+    meta = db.data.get("cookies_meta")
+    if not isinstance(meta, dict):
+        meta = {}
+        db.data["cookies_meta"] = meta
+        db.data.setdefault("settings", {})["cookies_meta"] = meta
+    return meta
+
+
+def _sanitize_cookies(text: str) -> str:
+    """
+    Netscape cookies.txt banata hai — comment lines, blank lines aur duplicate
+    entries hata deta hai. (Cookies kabhi DB/log me nahi bhejte, sirf file me.)
+    """
+    lines: list[str] = []
+    seen: set[str] = set()
+    for raw in (text or "").splitlines():
+        line = raw.strip("\n").strip()
+        if not line or line.startswith("#"):
+            if line.startswith("# Netscape") or line.startswith("# HTTP Cookie"):
+                continue
+            continue
+        parts = line.split("\t")
+        if len(parts) < 7:
+            parts = re.split(r"\s+", line)
+            if len(parts) < 7:
+                continue
+        key = "\t".join(parts[:2] + parts[5:6])
+        if key in seen:
+            continue
+        seen.add(key)
+        lines.append("\t".join(parts[:7]))
+    if not lines:
+        return ""
+    header = (
+        "# Netscape HTTP Cookie File\n"
+        "# Music-x-bot — admin se add kiya gaya (YouTube/yt-dlp ke liye)\n"
+        "# File me edit na karein jab tak zaroorat na ho.\n\n"
+    )
+    return header + "\n".join(lines) + "\n"
+
+
+def cookies_status_text(chat_id: Optional[int] = None) -> str:
+    meta = cookies_meta()
+    path = Path(config.COOKIES_FILE)
+    exists = path.exists() and path.stat().st_size > 0
+    lines = [
+        kv("🍪", "file", f"<code>{escape(str(config.COOKIES_FILE))}</code>"),
+        kv("📦", "status", "✅ active" if exists else "❌ missing"),
+        kv("🧾", "cookies", f"<code>{meta.get('count', 0)}</code>"),
+        kv("💾", "size", f"<code>{fmt_bytes(meta.get('size', 0))}</code>"),
+        kv("👤", "added by", f"<code>{meta.get('added_by', '—')}</code>"),
+        kv("📅", "added at", f"<code>{human_delta(time.time() - meta.get('added_at', 0)) if meta.get('added_at') else '—'} pehle</code>"),
+    ]
+    return frame("ᴄᴏᴏᴋɪᴇꜱ", lines, footer=owner_footer(chat_id), chat_id=chat_id)
+
+
+async def cookies_save(text: str, user_id: int) -> tuple[bool, str]:
+    """Cookies file save + meta (DB) — Firebase me sirf meta jaata hai, cookie content nahi."""
+    clean = _sanitize_cookies(text)
+    if not clean:
+        return False, "koi valid cookie line nahi mili (Netscape format chahiye)"
+    path = Path(config.COOKIES_FILE)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(clean, encoding="utf-8")
+    count = len([line for line in clean.splitlines() if line and not line.startswith("#")])
+
+    meta = cookies_meta()
+    meta.update(
+        {
+            "count": count,
+            "size": path.stat().st_size,
+            "added_by": int(user_id),
+            "added_at": int(time.time()),
+            "path": str(path),
+        }
+    )
+    db.mark_dirty()
+    with suppress(Exception):
+        await db.flush(force=True)
+    # yt engine ko naya cookie path batao
+    with suppress(Exception):
+        setattr(yt, "cookie_path", str(path))
+        if hasattr(yt, "SECRET") and getattr(yt, "SECRET", None) is not None:
+            pass
+    logger.info("🍪 Cookies update: %s cookies saved (user %s)", count, user_id)
+    if config.LOGGER_ID:
+        with suppress(Exception):
+            await app.send_message(
+                config.LOGGER_ID,
+                f"🍪 <b>Cookies updated</b> by <code>{user_id}</code>\n"
+                f"🧾 <code>{count}</code> cookies • 💾 <code>{fmt_bytes(path.stat().st_size)}</code>\n"
+                "<i>Content log me nahi bheja gaya (security).</i>",
+            )
+    return True, f"{count} cookies save ho gayi"
+
+
+@app.on_message(filters.command(["setcookies", "addcookies", "cookies"]) & app.sudoers)
+@lang.language()
+async def _set_cookies_cmd(_, m: types.Message):
+    chat_id = m.chat.id
+    args = m.command[1:]
+
+    if not args and not m.reply_to_message:
+        return await m.reply_text(
+            cookies_status_text(chat_id)
+            + "\n\n<b>Add kaise karein:</b>\n"
+            "• <code>cookies.txt</code> file par reply karke <code>/setcookies</code>\n"
+            "• Ya Netscape cookies text direct paste karke <code>/setcookies</code> (reply me)\n\n"
+            "<i>Cookies sirf file me save hoti hain — database/Firebase me sirf count/size/date "
+            "ka meta jaata hai (security).</i>",
+            link_preview_options=types.LinkPreviewOptions(is_disabled=True),
+        )
+
+    if args and args[0].lower() in {"status", "show", "info"}:
+        return await m.reply_text(cookies_status_text(chat_id), link_preview_options=types.LinkPreviewOptions(is_disabled=True))
+
+    if args and args[0].lower() in {"remove", "clear", "delete", "off"}:
+        with suppress(OSError):
+            Path(config.COOKIES_FILE).unlink()
+        meta = cookies_meta()
+        meta.clear()
+        meta["removed_at"] = int(time.time())
+        db.mark_dirty()
+        await db.flush(force=True)
+        return await m.reply_text("🧹 Cookies file hata di gayi.")
+
+    source = m.reply_to_message
+    sent = await m.reply_text("🍪 <b>Cookies save kar rahe hain...</b>")
+    text = ""
+    try:
+        if source and (source.document or source.audio):
+            raw = await source.download(in_memory=True)
+            text = raw.getvalue().decode("utf-8", errors="ignore") if hasattr(raw, "getvalue") else raw.decode("utf-8", errors="ignore")
+        elif source and source.text:
+            text = source.text
+        elif args:
+            text = " ".join(args)
+    except Exception as exc:  # noqa: BLE001
+        return await sent.edit_text(f"❌ File padhne me error: <code>{escape(str(exc))}</code>")
+
+    ok, message = await cookies_save(text, m.from_user.id)
+    if not ok:
+        return await sent.edit_text(f"❌ Save fail: <code>{escape(message)}</code>")
+    await sent.edit_text("✅ " + message + "\n\n" + cookies_status_text(chat_id), link_preview_options=types.LinkPreviewOptions(is_disabled=True))
+
+
+# ==============================================================================
+# SECTION: SESSION MANAGER  (OTP se khud Telegram login — jitne chahe accounts)
+# ==============================================================================
+PENDING_LOGIN: dict[int, dict[str, Any]] = {}
+SESSION_TMP_DIR = Path(config.CACHE_DIR) / "sessions"
+
+
+def db_sessions() -> list[dict]:
+    sessions = db.data.get("sessions")
+    if not isinstance(sessions, list):
+        sessions = []
+        db.data["sessions"] = sessions
+        db.data.setdefault("settings", {})["sessions"] = sessions
+    return sessions
+
+
+def _mask_session(string: str) -> str:
+    return f"{string[:12]}…{string[-6:]} ({len(string)} chars)" if string else "—"
+
+
+async def _assistant_ids() -> set[int]:
+    ids = set()
+    for client in userbot.clients:
+        ids.add(int(getattr(client, "id", 0) or 0))
+    return ids
+
+
+async def start_assistant_session(name: str, session_string: str, user_id: int = 0) -> tuple[bool, str]:
+    """DB session string se naya assistant client live start karo (restart ke bina)."""
+    try:
+        client = Client(
+            name=f"MusicXUB_{name}",
+            api_id=config.API_ID,
+            api_hash=config.API_HASH,
+            session_string=session_string,
+            no_updates=True,
+            workdir=str(SESSION_TMP_DIR),
+        )
+        await client.start()
+    except Exception as exc:  # noqa: BLE001
+        return False, f"session start fail: {exc}"
+
+    me = await client.get_me()
+    client.id = me.id
+    client.name = me.first_name
+    client.username = me.username
+    client.mention = me.mention
+    userbot.clients.append(client)
+    setattr(userbot, f"db_{name}", client)
+
+    # PyTgCalls instance (voice chat ke liye)
+    with suppress(Exception):
+        call_client = PyTgCalls(client, cache_duration=100)
+        await call_client.start()
+        anon.clients.append(call_client)
+        anon.decorators(call_client)
+
+    logger.info("✅ Assistant '%s' live start hua (@%s)", name, client.username)
+    if config.LOGGER_ID:
+        with suppress(Exception):
+            await app.send_message(
+                config.LOGGER_ID,
+                f"🎙️ <b>Naya assistant online</b>: <code>{escape(name)}</code>\n"
+                f"👤 @{client.username} (<code>{client.id}</code>)\n"
+                f"➕ Added by <code>{user_id}</code>",
+            )
+    return True, f"assistant @{client.username} online hai"
+
+
+def session_list_text(chat_id: Optional[int] = None) -> str:
+    sessions = db_sessions()
+    env_sessions = [
+        key for key in ("SESSION1", "SESSION2", "SESSION3", "SESSION4") if getattr(config, key, None)
+    ]
+    lines = [kv("🌐", "live assistants", f"<code>{len(userbot.clients)}</code>")]
+    lines.append(kv("🔑", "env sessions", f"<code>{len(env_sessions)}</code> ({', '.join(env_sessions) or '—'})"))
+    if sessions:
+        for i, item in enumerate(sessions, start=1):
+            stamp = item.get("added_at")
+            when = human_delta(time.time() - stamp) + " pehle" if stamp else "—"
+            lines.append(
+                kv(
+                    f"{i}️⃣",
+                    str(item.get("name", f"session{i}")),
+                    f"<code>{escape(str(item.get('phone') or 'hidden'))}</code> • <code>{when}</code>",
+                )
+            )
+    else:
+        lines.append("  <i>Database me koi extra session nahi.</i>")
+    return frame("ᴀꜱꜱɪꜱᴛᴀɴᴛ ꜱᴇꜱꜱɪᴏɴꜱ", lines, footer=owner_footer(chat_id), chat_id=chat_id)
+
+
+@app.on_message(filters.command(["addsession", "newsession", "login"]) & app.sudoers)
+@lang.language()
+async def _add_session_cmd(_, m: types.Message):
+    if m.chat.type != enums.ChatType.PRIVATE:
+        try:
+            await m.delete()
+        except Exception:
+            pass
+        return await m.reply_text("🔐 Security: <code>/addsession</code> sirf bot ke <b>DM me</b> use karein.")
+
+    PENDING_LOGIN[m.from_user.id] = {"step": "phone", "created": time.time()}
+    await m.reply_text(
+        frame(
+            "ᴀᴅᴅ ᴀꜱꜱɪꜱᴛᴀɴᴛ",
+            [
+                kv("1️⃣", "step", "apna phone number bhejein"),
+                kv("🌍", "format", "country code ke saath — <code>+919876543210</code>"),
+                kv("🔐", "note", "OTP Telegram se aayega, code yahin bhejein"),
+                "",
+                "<i>Cancel karne ke liye</i> <code>/cancel</code>",
+            ],
+            footer=owner_footer(),
+        ),
+        link_preview_options=types.LinkPreviewOptions(is_disabled=True),
+    )
+
+
+@app.on_message(filters.command(["cancel"]) & filters.private)
+async def _cancel_login(_, m: types.Message):
+    if m.from_user.id in PENDING_LOGIN:
+        client = PENDING_LOGIN.pop(m.from_user.id).get("client")
+        if client:
+            with suppress(Exception):
+                await client.disconnect()
+        return await m.reply_text("✅ Login cancel kar diya.")
+    await m.reply_text("ℹ️ Koi pending login nahi hai.")
+
+
+@app.on_message(filters.command(["sessions"]) & app.sudoers)
+@lang.language()
+async def _sessions_cmd(_, m: types.Message):
+    await m.reply_text(
+        session_list_text(m.chat.id) + "\n\n<b>Commands:</b>\n"
+        "• <code>/addsession</code> — OTP se naya account add (DM me)\n"
+        "• <code>/delsession &lt;name&gt;</code> — hatayein",
+        link_preview_options=types.LinkPreviewOptions(is_disabled=True),
+    )
+
+
+@app.on_message(filters.command(["delsession", "remsession"]) & app.sudoers)
+@lang.language()
+async def _del_session_cmd(_, m: types.Message):
+    if len(m.command) < 2:
+        return await m.reply_text("⚠️ Name bhejein: <code>/delsession session2</code>")
+    name = m.command[1].strip()
+    sessions = db_sessions()
+    target = next((item for item in sessions if str(item.get("name", "")).lower() == name.lower()), None)
+    if not target:
+        return await m.reply_text("❌ Ye session database me nahi hai.")
+    sessions.remove(target)
+    db.mark_dirty()
+    await db.flush(force=True)
+
+    # live client bhi band karo
+    client = getattr(userbot, f"db_{name}", None)
+    if client:
+        with suppress(Exception):
+            await client.stop()
+        with suppress(Exception):
+            userbot.clients.remove(client)
+    await m.reply_text(f"🗑️ Session <code>{escape(name)}</code> delete ho gaya (Firebase se bhi).")
+
+
+async def handle_login_input(_, m: types.Message) -> bool:
+    """Pending login flow ka input handle karta hai. True = message consume ho gaya."""
+    state = PENDING_LOGIN.get(m.from_user.id)
+    if not state or not m.text:
+        return False
+
+    step = state.get("step")
+    value = m.text.strip()
+
+    if step == "phone":
+        phone = value if value.startswith("+") else "+" + re.sub(r"[^\d]", "", value)
+        client = Client(
+            name=f"login_{m.from_user.id}",
+            api_id=config.API_ID,
+            api_hash=config.API_HASH,
+            in_memory=True,
+            no_updates=True,
+        )
+        await client.connect()
+        try:
+            sent_code = await client.send_code(phone)
+        except Exception as exc:  # noqa: BLE001
+            with suppress(Exception):
+                await client.disconnect()
+            PENDING_LOGIN.pop(m.from_user.id, None)
+            await m.reply_text(f"❌ Code bhejne me error: <code>{escape(str(exc))}</code>\nDobara <code>/addsession</code> try karein.")
+            return True
+
+        state.update({"step": "otp", "client": client, "phone": phone, "phone_code_hash": sent_code.phone_code_hash})
+        hint = getattr(sent_code, "type", None)
+        await m.reply_text(
+            frame(
+                "ᴏᴛᴘ ʙʜᴇᴊᴀ",
+                [
+                    kv("📱", "number", f"<code>{escape(phone)}</code>"),
+                    kv("📨", "otp", "Telegram app me aaya code bhejein"),
+                    kv("ℹ️", "type", f"<code>{hint}</code>"),
+                ],
+                footer=owner_footer(),
+            ),
+            link_preview_options=types.LinkPreviewOptions(is_disabled=True),
+        )
+        return True
+
+    if step == "otp":
+        client: Client = state["client"]
+        code = re.sub(r"[^\d]", "", value)
+        try:
+            await client.sign_in(state["phone"], state["phone_code_hash"], code)
+        except errors.SessionPasswordNeeded:
+            state["step"] = "password"
+            await m.reply_text(
+                frame("2-ꜰᴀ ᴘᴀꜱꜱᴡᴏʀᴅ", [kv("🔐", "step", "two-step password bhejein")], footer=owner_footer()),
+                link_preview_options=types.LinkPreviewOptions(is_disabled=True),
+            )
+            return True
+        except Exception as exc:  # noqa: BLE001
+            await m.reply_text(f"❌ OTP galat/expired: <code>{escape(str(exc))}</code>\nDobara code bhejein ya <code>/cancel</code>.")
+            return True
+        await finish_session_login(_, m, state)
+        return True
+
+    if step == "password":
+        client: Client = state["client"]
+        try:
+            await client.check_password(value)
+        except Exception as exc:  # noqa: BLE001
+            await m.reply_text(f"❌ Password galat: <code>{escape(str(exc))}</code>")
+            return True
+        await finish_session_login(_, m, state)
+        return True
+
+    return False
+
+
+async def finish_session_login(_, m: types.Message, state: dict) -> None:
+    """Login complete: session string nikaalo, DB/Firebase me save, live start."""
+    client: Client = state["client"]
+    user_id = m.from_user.id
+    try:
+        session_string = await client.export_session_string()
+        me = await client.get_me()
+    except Exception as exc:  # noqa: BLE001
+        PENDING_LOGIN.pop(user_id, None)
+        return await m.reply_text(f"❌ Session export fail: <code>{escape(str(exc))}</code>")
+
+    with suppress(Exception):
+        await client.disconnect()
+
+    name = f"db{len(db_sessions()) + 1}"
+    record = {
+        "name": name,
+        "string": session_string,   # Firebase me save (owner ka DB)
+        "phone": state.get("phone", ""),
+        "user_id": getattr(me, "id", 0),
+        "username": getattr(me, "username", None),
+        "added_by": user_id,
+        "added_at": int(time.time()),
+    }
+    sessions = db_sessions()
+    sessions.append(record)
+    db.mark_dirty()
+    await db.flush(force=True)
+    PENDING_LOGIN.pop(user_id, None)
+
+    ok, message = await start_assistant_session(name, session_string, user_id)
+    text = frame(
+        "ꜱᴇꜱꜱɪᴏɴ ꜱᴀᴠᴇᴅ",
+        [
+            kv("👤", "account", f"@{record['username'] or record['user_id']}"),
+            kv("🏷️", "name", f"<code>{name}</code>"),
+            kv("💾", "saved", "database + Firebase ✅"),
+            kv("🎙️", "assistant", "✅ live" if ok else f"⚠️ {message}"),
+        ],
+        footer=owner_footer(),
+    )
+    await m.reply_text(text, link_preview_options=types.LinkPreviewOptions(is_disabled=True))
+
+
+@app.on_message(filters.private & ~filters.command(["start", "cancel", "addsession", "newsession", "login", "sessions", "delsession", "remsession"]), group=-1)
+async def _login_input_watcher(_, m: types.Message):
+    """Pending login ka next message consume karo (OTP/phone/password)."""
+    if not m.from_user or m.from_user.id not in PENDING_LOGIN:
+        return
+    with suppress(Exception):
+        if not m.chat.type == enums.ChatType.PRIVATE:
+            return
+        consumed = await handle_login_input(_, m)
+        if consumed:
+            raise StopPropagation
+
+
+async def load_db_sessions() -> int:
+    """Boot par DB (Firebase) me saved saare sessions ko assistant banake start karo."""
+    loaded = 0
+    for record in db_sessions():
+        name, session_string = str(record.get("name", "")), str(record.get("string", ""))
+        if not session_string or getattr(userbot, f"db_{name}", None):
+            continue
+        ok, _ = await start_assistant_session(name, session_string, int(record.get("added_by", 0) or 0))
+        if ok:
+            loaded += 1
+    if loaded:
+        logger.info("🎙️ %d assistant session(s) DB/Firebase se start hue.", loaded)
+    return loaded
+
+
+# ==============================================================================
+# SECTION: HEALTH MONITOR + HEARTBEAT + AUTO-HEAL + VC IDLE
+# ==============================================================================
+class HealthMonitor:
+    """
+    Bot khud ko monitor karta hai aur khud theek karta hai (self-heal):
+      • Telegram connection / assistant clients check + reconnect
+      • Firebase reconnect (degraded mode clear)
+      • DB flush + dirs ensure + disk/RAM check
+      • Heartbeat: har HEARTBEAT_MINUTES me admin/LOG group ko status
+    """
+
+    def __init__(self) -> None:
+        self.task: Optional[asyncio.Task] = None
+        self.idle_task: Optional[asyncio.Task] = None
+        self.vc_idle_since: dict[int, float] = {}
+        self.last_heartbeat = 0.0
+
+    # ---- stats helpers -------------------------------------------------
+    def stats(self) -> dict:
+        data = db.data.setdefault("health", {})
+        data.setdefault("heals", 0)
+        data.setdefault("checks", 0)
+        data.setdefault("errors", 0)
+        data.setdefault("reconnects", 0)
+        db.data.setdefault("settings", {})["health"] = data
+        return data
+
+    async def check_and_heal(self, reason: str = "scheduled") -> dict:
+        """Ek heal cycle chalao aur report return karo."""
+        report: dict[str, Any] = {"reason": reason, "fixed": [], "issues": []}
+        data = self.stats()
+        data["checks"] = int(data.get("checks", 0)) + 1
+        data["last_check"] = int(time.time())
+
+        # 1. bot connection
+        if not getattr(app, "is_connected", False):
+            report["issues"].append("bot disconnected")
+            with suppress(Exception):
+                await app.restart()
+                report["fixed"].append("bot reconnected")
+                data["reconnects"] = int(data.get("reconnects", 0)) + 1
+                data["heals"] = int(data.get("heals", 0)) + 1
+
+        # 2. assistant clients + PyTgCalls
+        alive_assistants = [c for c in userbot.clients if getattr(c, "is_connected", True)]
+        if not alive_assistants and userbot.clients:
+            report["issues"].append("assistant sessions down")
+            for client in list(userbot.clients):
+                with suppress(Exception):
+                    await client.stop()
+                with suppress(Exception):
+                    userbot.clients.remove(client)
+            with suppress(Exception):
+                await load_db_sessions()
+            with suppress(Exception):
+                await userbot.boot()
+            report["fixed"].append("assistants rebuilt")
+            data["heals"] = int(data.get("heals", 0)) + 1
+
+        if not anon.clients and userbot.clients:
+            report["issues"].append("pytgcalls down")
+            with suppress(Exception):
+                await anon.boot()
+                report["fixed"].append("pytgcalls restarted")
+                data["heals"] = int(data.get("heals", 0)) + 1
+
+        # 3. database (firebase/local)
+        if db.mode == "local" and config.firebase_enabled:
+            report["issues"].append("firebase offline (local fallback)")
+            with suppress(Exception):
+                ok = await asyncio.to_thread(db._connect_firebase)  # noqa: SLF001
+                if ok:
+                    db.mode = "firebase"
+                    db.degraded = False
+                    await db.flush(force=True)
+                    report["fixed"].append("firebase reconnect")
+                    data["heals"] = int(data.get("heals", 0)) + 1
+        with suppress(Exception):
+            await db.flush(force=True)
+
+        # 4. dirs + disk
+        with suppress(Exception):
+            config.ensure_dirs()
+        with suppress(Exception):
+            usage = psutil.disk_usage("/")
+            free_gb = usage.free / 1024 ** 3
+            report["disk_free_gb"] = round(free_gb, 2)
+            if free_gb < 1:
+                report["issues"].append("disk almost full")
+                with suppress(Exception):
+                    removed = 0
+                    for path in Path(config.DOWNLOADS_DIR).glob("*"):
+                        if path.is_file() and time.time() - path.stat().st_mtime > 3600:
+                            path.unlink()
+                            removed += 1
+                    report["fixed"].append(f"cleanup {removed} files")
+                    data["heals"] = int(data.get("heals", 0)) + 1
+
+        report["status"] = (
+            "healthy" if not report["issues"] else ("healed" if report["fixed"] else "degraded")
+        )
+        data["last_report"] = {
+            "at": int(time.time()),
+            "status": "healthy" if not report["issues"] else "healed",
+            "fixed": report["fixed"][:5],
+            "issues": report["issues"][:5],
+        }
+        db.mark_dirty()
+        if report["fixed"]:
+            logger.warning("🩺 Self-heal (%s): %s", reason, ", ".join(report["fixed"]))
+        return report
+
+    # ---- heartbeat -----------------------------------------------------
+    def heartbeat_text(self, chat_id: Optional[int] = None) -> str:
+        data = self.stats()
+        usage = psutil.disk_usage("/")
+        last_backup = backup_manager.list_backups()
+        backup_txt = human_delta(time.time() - last_backup[-1].stat().st_mtime) + " pehle" if last_backup else "—"
+        lines = [
+            kv("🤖", "bot", f"<code>{escape(app.name or BOT_DISPLAY_NAME)}</code>"),
+            kv("⏱️", "uptime", f"<code>{human_delta(time.time() - boot)}</code>"),
+            kv("💬", "chats", f"<code>{len(db.chats)}</code> • 👤 <code>{len(db.users)}</code>"),
+            kv("🎧", "active vc", f"<code>{len(db.active_calls)}</code> • 🎙️ <code>{len(userbot.clients)}</code>"),
+            kv("🗄️", "database", f"{db.mode_label}"),
+            kv("🩺", "health", f"<code>{data.get('status', 'ok')}</code> • heals <code>{data.get('heals', 0)}</code>"),
+            kv("🧠", "ram", f"<code>{psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2:.1f} MB</code>"),
+            kv("💾", "disk", f"<code>{usage.free / 1024 ** 3:.1f} GB free</code>"),
+            kv("📦", "last backup", f"<code>{backup_txt}</code>"),
+        ]
+        return frame("ʜᴇᴀʀᴛʙᴇᴀᴛ", lines, footer=owner_footer(chat_id), chat_id=chat_id)
+
+    async def heartbeat(self, force: bool = False) -> None:
+        if not force and time.time() - self.last_heartbeat < max(60, config.HEARTBEAT_MINUTES * 60):
+            return
+        self.last_heartbeat = time.time()
+        text = self.heartbeat_text()
+        targets = {config.LOGGER_ID}
+        if config.HEARTBEAT_TO_ADMIN and config.OWNER_ID:
+            targets.add(config.OWNER_ID)
+        for chat_id in {t for t in targets if t}:
+            with suppress(Exception):
+                await app.send_message(chat_id, text, link_preview_options=types.LinkPreviewOptions(is_disabled=True))
+        logger.info(
+            "💓 Heartbeat: uptime %s | chats %s | vc %s | db %s | heals %s",
+            human_delta(time.time() - boot),
+            len(db.chats),
+            len(db.active_calls),
+            db.mode,
+            self.stats().get("heals", 0),
+        )
+
+    # ---- loops ---------------------------------------------------------
+    async def _loop(self) -> None:
+        while True:
+            try:
+                await asyncio.sleep(60)
+                await self.check_and_heal("scheduled")
+                await self.heartbeat()
+            except asyncio.CancelledError:  # pragma: no cover
+                raise
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Health loop error: %s", exc)
+                self.stats()["errors"] = int(self.stats().get("errors", 0)) + 1
+
+    async def _vc_idle_loop(self) -> None:
+        """VC me koi listener na ho to 1-2 min me khud leave (aur stop)."""
+        while True:
+            try:
+                # pehle check, phir 30s sleep (turant react kare)
+                if not config.VC_IDLE_LEAVE or not anon.clients:
+                    await asyncio.sleep(30)
+                    continue
+                for chat_id in list(db.active_calls):
+                    try:
+                        participants = await anon.clients[0].get_participants(chat_id)
+                    except Exception:  # noqa: BLE001
+                        continue
+                    listeners = 0
+                    bot_ids = {int(getattr(app, "id", 0) or 0)} | await _assistant_ids()
+                    for member in participants or []:
+                        user_id = int(getattr(member, "user_id", 0) or 0)
+                        if user_id and user_id not in bot_ids:
+                            listeners += 1
+                    if listeners:
+                        self.vc_idle_since.pop(chat_id, None)
+                        continue
+
+                    since = self.vc_idle_since.setdefault(chat_id, time.time())
+                    if time.time() - since >= config.VC_IDLE_SECONDS:
+                        logger.info("🚪 VC %s empty hai (%ds) — bot khud leave kar raha hai.", chat_id, config.VC_IDLE_SECONDS)
+                        self.vc_idle_since.pop(chat_id, None)
+                        with suppress(Exception):
+                            await anon.stop(chat_id)
+                        with suppress(Exception):
+                            await app.send_message(
+                                chat_id,
+                                f"🚪 <b>VC khaali hai</b> — {config.VC_IDLE_SECONDS}s se koi sun-ne wala nahi tha, "
+                                "isliye bot ne leave kar diya.\n\n<i>Dobara /play karein.</i>",
+                            )
+            except asyncio.CancelledError:  # pragma: no cover
+                raise
+            except asyncio.CancelledError:  # pragma: no cover
+                raise
+            except Exception as exc:  # noqa: BLE001
+                logger.error("VC idle loop error: %s", exc)
+            with suppress(Exception):
+                await asyncio.sleep(30)
+
+    def start(self) -> None:
+        if self.task is None or self.task.done():
+            self.task = asyncio.create_task(self._loop())
+        if self.idle_task is None or self.idle_task.done():
+            self.idle_task = asyncio.create_task(self._vc_idle_loop())
+        logger.info("🩺 Health monitor + VC idle watcher start (heartbeat har %s min).", config.HEARTBEAT_MINUTES)
+
+    async def stop(self) -> None:
+        for task in (self.task, self.idle_task):
+            if task and not task.done():
+                task.cancel()
+                with suppress(Exception):
+                    await task
+
+
+health = HealthMonitor()
+
+
+@app.on_message(filters.command(["health", "heal", "status"]) & app.sudoers)
+@lang.language()
+async def _health_cmd(_, m: types.Message):
+    if m.command[0] == "heal":
+        sent = await m.reply_text("🩺 <b>Self-heal chala rahe hain...</b>")
+        report = await health.check_and_heal("manual")
+        lines = [
+            kv("✅", "fixed", ", ".join(report["fixed"]) or "kuch nahi"),
+            kv("⚠️", "issues", ", ".join(report["issues"]) or "koi nahi"),
+            kv("🩺", "status", report.get("status", "healthy")),
+            kv("💾", "disk free", f"<code>{report.get('disk_free_gb', '—')} GB</code>"),
+        ]
+        return await sent.edit_text(frame("ʜᴇᴀʟ ʀᴇᴘᴏʀᴛ", lines, footer=owner_footer(m.chat.id), chat_id=m.chat.id))
+
+    report = await health.check_and_heal("view")
+    data = health.stats()
+    usage = psutil.disk_usage("/")
+    last_backup = backup_manager.list_backups()
+    lines = [
+        kv("🟢", "bot", "connected ✅" if getattr(app, "is_connected", False) else "❌ disconnected"),
+        kv("🎙️", "assistants", f"<code>{len(userbot.clients)}</code> • pytgcalls <code>{len(anon.clients)}</code>"),
+        kv("🗄️", "database", f"{db.mode_label}"),
+        kv("🩺", "checks", f"<code>{data.get('checks', 0)}</code> • heals <code>{data.get('heals', 0)}</code>")
+        ,
+        kv("♻️", "reconnects", f"<code>{data.get('reconnects', 0)}</code>"),
+        kv("🧠", "ram", f"<code>{psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2:.1f} MB</code>"),
+        kv("💾", "disk", f"<code>{usage.free / 1024 ** 3:.1f} GB free</code>"),
+        kv("📦", "backups", f"<code>{len(last_backup)}</code>"),
+        kv("🚪", "vc idle", f"<code>{config.VC_IDLE_SECONDS}s</code> (auto-leave)"),
+    ]
+    await m.reply_text(
+        frame("ʜᴇᴀʟᴛʜ", lines, footer=owner_footer(m.chat.id), chat_id=m.chat.id)
+        + ("\n\n⚠️ <b>Issues:</b> " + ", ".join(report["issues"]) if report["issues"] else ""),
+        reply_markup=buttons.ikm(
+            [
+                [buttons.ikb(text="🩺 Heal now", callback_data="health heal")],
+                [buttons.ikb(text="💓 Heartbeat bhejo", callback_data="health beat")],
+            ]
+        ),
+        link_preview_options=types.LinkPreviewOptions(is_disabled=True),
+    )
+
+
+@app.on_callback_query(filters.regex("^health") & app.sudoers)
+@lang.language()
+async def _health_cb(_, query: types.CallbackQuery):
+    args = query.data.split()
+    action = args[1] if len(args) > 1 else "heal"
+    if action == "beat":
+        await query.answer("💓 Heartbeat bhej diya", show_alert=True)
+        return await health.heartbeat(force=True)
+    report = await health.check_and_heal("button")
+    await query.answer(
+        f"🩺 {report.get('status', 'healthy')} — fixed: {', '.join(report['fixed']) or 'kuch nahi'}",
+        show_alert=True,
+    )
+
+
+# ==============================================================================
+# SECTION: SUPER ADMIN  (main .py me defined — more admins add kar sakta hai)
+# ==============================================================================
+def is_super_admin(user_id: int) -> bool:
+    return bool(user_id) and int(user_id) in {int(x) for x in config.SUPER_ADMIN_IDS}
+
+
+@app.on_message(filters.command(["superadmin", "headadmin", "owner"]) & app.sudoers)
+@lang.language()
+async def _super_admin_cmd(_, m: types.Message):
+    chat_id = m.chat.id
+    supers = sorted({int(x) for x in config.SUPER_ADMIN_IDS})
+    lines = [
+        kv("👑", f"super admin {i + 1}", f"<code>{uid}</code>") for i, uid in enumerate(supers)
+    ]
+    lines += [
+        "",
+        "<b>Super admin ke paas ye extra powers hain:</b>",
+        "  ▸ <code>/addsudo</code> / <code>/delsudo</code> — naye admins banayein",
+        "  ▸ <code>/addsession</code> — naye assistant accounts (OTP se)",
+        "  ▸ <code>/superadmin</code> — ye list",
+        "",
+        f"  <i>Aapke paas ye power hai:</i> {'✅ haan' if is_super_admin(m.from_user.id) else '❌ nahi'}",
+    ]
+    await m.reply_text(
+        frame("ꜱᴜᴘᴇʀ ᴀᴅᴍɪɴ", lines, footer=owner_footer(chat_id), chat_id=chat_id),
+        link_preview_options=types.LinkPreviewOptions(is_disabled=True),
+    )
+
+
+async def admin_panel_extra_sections(
+    section: str, chat_id: int, is_sudo: bool, in_group: bool
+) -> Optional[tuple[str, types.InlineKeyboardMarkup]]:
+    """Admin panel ke naye sections (fonts, health, force join, cookies, sessions)."""
+    back_row = [buttons.ikb(text="🔙 Admin Panel", callback_data="admpanel home")]
+
+    if section == "fonts":
+        current = font_for(chat_id)
+        text = frame(
+            "ꜰᴏɴᴛ + ᴅᴇꜱɪɢɴ",
+            [
+                kv("🎨", "current style", f"<code>{current}</code>"),
+                kv("🧩", "box design", "ON ✅" if design_on(chat_id) else "OFF ❌"),
+                kv("📊", "styles", f"<code>{len(FONT_STYLE_NAMES)}</code> available"),
+                "",
+                "  <i>Neeche buttons se turant badlein — per-chat save hota hai.</i>",
+            ],
+            footer=owner_footer(chat_id),
+            chat_id=chat_id,
+        )
+        markup = font_markup(current, chat_id)
+        markup.inline_keyboard.append(back_row)
+        return text, markup
+
+    if section == "health":
+        report = await health.check_and_heal("panel")
+        data = health.stats()
+        usage = psutil.disk_usage("/")
+        text = frame(
+            "ʜᴇᴀʟᴛʜ ᴍᴏɴɪᴛᴏʀ",
+            [
+                kv("🟢", "bot", "connected ✅" if getattr(app, "is_connected", False) else "❌ down"),
+                kv("🎙️", "assistants", f"<code>{len(userbot.clients)}</code>"),
+                kv("🩺", "checks", f"<code>{data.get('checks', 0)}</code> • heals <code>{data.get('heals', 0)}</code>"),
+                kv("♻️", "reconnects", f"<code>{data.get('reconnects', 0)}</code>"),
+                kv("🧠", "ram", f"<code>{psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2:.1f} MB</code>"),
+                kv("💾", "disk free", f"<code>{usage.free / 1024 ** 3:.1f} GB</code>"),
+                kv("🚪", "vc idle leave", f"<code>{config.VC_IDLE_SECONDS}s</code>"),
+                kv("🔧", "last fix", ", ".join((data.get("last_report") or {}).get("fixed", [])) or "—"),
+            ],
+            footer=owner_footer(chat_id),
+            chat_id=chat_id,
+        )
+        if report.get("issues"):
+            text += "\n\n⚠️ <b>Issues:</b> " + ", ".join(report["issues"])
+        return text, buttons.ikm(
+            [
+                [
+                    buttons.ikb(text="🩺 Heal now", callback_data="health heal"),
+                    buttons.ikb(text="💓 Heartbeat", callback_data="health beat"),
+                ],
+                back_row,
+            ]
+        )
+
+    if section == "forcejoin":
+        channels = force_join_channels()
+        text = frame(
+            "ꜰᴏʀᴄᴇ ᴊᴏɪɴ",
+            (
+                [kv("📢", f"channel {i + 1}", f"<code>{escape(str(ch))}</code>") for i, ch in enumerate(channels)]
+                or ["  <i>Koi channel set nahi hai — bot free use ho raha hai.</i>"]
+            ),
+            footer=owner_footer(chat_id),
+            chat_id=chat_id,
+        )
+        text += (
+            "\n\n<b>Commands:</b>\n"
+            "• <code>/forcejoin add @channel</code>\n"
+            "• <code>/forcejoin remove @channel</code>\n"
+            "• <code>/forcejoin off</code>"
+        )
+        return text, buttons.ikm([[buttons.ikb(text="✅ Preview", callback_data="fjoin preview")], back_row])
+
+    if section == "cookies":
+        return cookies_status_text(chat_id), buttons.ikm(
+            [
+                [buttons.ikb(text="ℹ️ Kaise add karein?", callback_data="admpanel cookies_help")],
+                back_row,
+            ]
+        )
+
+    if section == "cookies_help":
+        return (
+            "🍪 <b>Cookies add karein</b>\n\n"
+            "1️⃣ <code>cookies.txt</code> file par reply karke <code>/setcookies</code> bhejein\n"
+            "2️⃣ Ya Netscape cookies text copy karke kisi message par reply me <code>/setcookies</code>\n\n"
+            "<i>Security: cookie content database/Firebase me nahi jaata — sirf count/size/date "
+            "ka meta jaata hai.</i>",
+            buttons.ikm([back_row]),
+        )
+
+    if section == "sessions":
+        text = session_list_text(chat_id) + (
+            "\n\n<b>Naya account add karein:</b>\n"
+            "• Bot ke <b>DM me</b> <code>/addsession</code> bhejein\n"
+            "• Phone number → OTP → (2FA password) — bas!\n"
+            "• Session database + Firebase me save, assistant turant live ✅"
+        )
+        return text, buttons.ikm(
+            [
+                [buttons.ikb(text="➕ Add session (DM me)", url=f"https://t.me/{(getattr(app, 'username', '') or '')}?start=addsession")],
+                back_row,
+            ]
+        )
+
+    return None
 
 
 # ==============================================================================
@@ -9688,6 +11133,12 @@ async def main() -> None:
     # 4. Thumbnail generator (aiohttp session)
     with suppress(Exception):
         await thumb.start()
+
+    # 4b. Health monitors + DB sessions (Firebase me saved assistants)
+    with suppress(Exception):
+        await load_db_sessions()
+    with suppress(Exception):
+        health.start()
 
     # 5. External plugins (plugins/ folder)
     plugin_manager.load_all()
