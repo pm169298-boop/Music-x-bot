@@ -4,24 +4,24 @@ pip 26.2.1 from /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-pack
 Linux runnervmtr4k5 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
 /home/runner/work/Music-x-bot/Music-x-bot
 total 692
-drwxr-xr-x 7 runner runner   4096 Sep 27 12:38 .
-drwxr-xr-x 3 runner runner   4096 Sep 27 12:38 ..
--rw-r--r-- 1 runner runner    211 Sep 27 12:38 .dockerignore
-drwxr-xr-x 7 runner runner   4096 Sep 27 12:38 .git
-drwxr-xr-x 3 runner runner   4096 Sep 27 12:38 .github
--rw-r--r-- 1 runner runner    519 Sep 27 12:38 .gitignore
--rw-r--r-- 1 runner runner   1137 Sep 27 12:38 Dockerfile
--rw-r--r-- 1 runner runner   1079 Sep 27 12:38 LICENSE
--rw-r--r-- 1 runner runner     24 Sep 27 12:38 Procfile
--rw-r--r-- 1 runner runner  14520 Sep 27 12:38 README.md
-drwxr-xr-x 2 runner runner   4096 Sep 27 12:38 ci-artifacts
-drwxr-xr-x 2 runner runner   4096 Sep 27 12:38 locales
--rw-r--r-- 1 runner runner 620902 Sep 27 12:38 main.py
-drwxr-xr-x 2 runner runner   4096 Sep 27 12:38 plugins
--rw-r--r-- 1 runner runner   1112 Sep 27 12:38 requirements.txt
--rw-r--r-- 1 runner runner   5376 Sep 27 12:38 sample.env
--rwxr-xr-x 1 runner runner   3538 Sep 27 12:38 setup
--rwxr-xr-x 1 runner runner    113 Sep 27 12:38 start
+drwxr-xr-x 7 runner runner   4096 Sep 27 12:41 .
+drwxr-xr-x 3 runner runner   4096 Sep 27 12:41 ..
+-rw-r--r-- 1 runner runner    211 Sep 27 12:41 .dockerignore
+drwxr-xr-x 7 runner runner   4096 Sep 27 12:41 .git
+drwxr-xr-x 3 runner runner   4096 Sep 27 12:41 .github
+-rw-r--r-- 1 runner runner    519 Sep 27 12:41 .gitignore
+-rw-r--r-- 1 runner runner   1137 Sep 27 12:41 Dockerfile
+-rw-r--r-- 1 runner runner   1079 Sep 27 12:41 LICENSE
+-rw-r--r-- 1 runner runner     24 Sep 27 12:41 Procfile
+-rw-r--r-- 1 runner runner  14520 Sep 27 12:41 README.md
+drwxr-xr-x 2 runner runner   4096 Sep 27 12:41 ci-artifacts
+drwxr-xr-x 2 runner runner   4096 Sep 27 12:41 locales
+-rw-r--r-- 1 runner runner 620902 Sep 27 12:41 main.py
+drwxr-xr-x 2 runner runner   4096 Sep 27 12:41 plugins
+-rw-r--r-- 1 runner runner   1112 Sep 27 12:41 requirements.txt
+-rw-r--r-- 1 runner runner   5376 Sep 27 12:41 sample.env
+-rwxr-xr-x 1 runner runner   3538 Sep 27 12:41 setup
+-rwxr-xr-x 1 runner runner    113 Sep 27 12:41 start
 === pip upgrade ===
 Requirement already satisfied: pip in /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages (26.2.1)
 === pip install -r requirements.txt ===
@@ -144,21 +144,21 @@ Collecting pyasn1<0.7.0,>=0.6.1 (from pyasn1-modules>=0.2.1->google-auth<3.0.0,>
 Collecting packaging (from deprecation->py-tgcalls>=2.2.11->-r requirements.txt (line 12))
   Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
 Downloading kurigram-2.2.26-py3-none-any.whl (6.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.0/6.0 MB 157.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.0/6.0 MB 132.4 MB/s  0:00:00
 Downloading pytgcrypto-1.2.12-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (51 kB)
 Downloading py_tgcalls-3.0.0-py3-none-any.whl (85 kB)
 Downloading ntgcalls-3.0.0-cp311-cp311-manylinux_2_28_x86_64.whl (42.3 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 42.3/42.3 MB 142.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 42.3/42.3 MB 64.7 MB/s  0:00:00
 Downloading yt_dlp-2026.8.19-py3-none-any.whl (3.2 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 285.5 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 155.1 MB/s  0:00:00
 Downloading py_yt_search-0.8.0-py3-none-any.whl (684 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 684.9/684.9 kB 161.0 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 684.9/684.9 kB 110.2 MB/s  0:00:00
 Downloading aiohttp-3.14.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.8 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 299.7 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 134.6 MB/s  0:00:00
 Downloading multidict-6.9.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (320 kB)
 Downloading yarl-1.25.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (117 kB)
 Downloading pillow-12.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.9 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 369.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 142.9 MB/s  0:00:00
 Downloading python_dotenv-1.2.3-py3-none-any.whl (22 kB)
 Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
 Downloading firebase_admin-7.7.0-py3-none-any.whl (144 kB)
@@ -167,7 +167,7 @@ Downloading google_api_core-2.39.0-py3-none-any.whl (214 kB)
 Downloading google_auth-2.58.1-py3-none-any.whl (262 kB)
 Downloading googleapis_common_protos-1.75.4-py3-none-any.whl (307 kB)
 Downloading grpcio-1.84.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (7.2 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.2/7.2 MB 316.7 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.2/7.2 MB 109.2 MB/s  0:00:00
 Downloading grpcio_status-1.84.0-py3-none-any.whl (14 kB)
 Downloading h2-4.4.1-py3-none-any.whl (62 kB)
 Downloading hpack-4.2.0-py3-none-any.whl (34 kB)
@@ -188,7 +188,7 @@ Downloading cachecontrol-0.14.4-py3-none-any.whl (22 kB)
 Downloading msgpack-1.2.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (422 kB)
 Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
 Downloading cryptography-50.0.1-cp311-abi3-manylinux_2_34_x86_64.whl (4.7 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.7/4.7 MB 316.5 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.7/4.7 MB 156.1 MB/s  0:00:00
 Downloading cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (217 kB)
 Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (231 kB)
 Downloading google_cloud_firestore-2.32.0-py3-none-any.whl (440 kB)
@@ -209,18 +209,265 @@ Downloading pycparser-3.0-py3-none-any.whl (48 kB)
 Building wheels for collected packages: pyaes
   Building wheel for pyaes (pyproject.toml): started
   Building wheel for pyaes (pyproject.toml): finished with status 'done'
-  Created wheel for pyaes: filename=pyaes-1.6.1-py3-none-any.whl size=26422 sha256=db258171558aa96e23e9d0e22ec133e0b08250a0d0c56938ffdcab2fc3ed632e
+  Created wheel for pyaes: filename=pyaes-1.6.1-py3-none-any.whl size=26422 sha256=b40f02ceda7aa6d4113ab941a9d412c0ae0fdab818dece7e369244818ac9e210
   Stored in directory: /home/runner/.cache/pip/wheels/4e/52/33/010d0843550bffb6a591b11629070ae140c0ad4f53e68a3bd3
 Successfully built pyaes
 Installing collected packages: pyaes, yt-dlp, urllib3, typing_extensions, python-socks, python-dotenv, pytgcrypto, pyjwt, pycparser, pyasn1, psutil, protobuf, propcache, pillow, packaging, ntgcalls, multidict, msgpack, idna, hyperframe, hpack, h11, google-crc32c, frozenlist, charset_normalizer, certifi, attrs, aiohappyeyeballs, yarl, requests, pyasn1-modules, proto-plus, opentelemetry-api, httpcore, h2, grpcio, googleapis-common-protos, google-resumable-media, deprecation, cffi, anyio, aiosignal, kurigram, httpx, grpcio-status, cryptography, cachecontrol, aiohttp, py-yt-search, py-tgcalls, google-auth, google-api-core, google-cloud-core, google-cloud-storage, google-cloud-firestore, firebase-admin
 
 Successfully installed aiohappyeyeballs-2.7.1 aiohttp-3.14.3 aiosignal-1.4.0 anyio-4.15.1 attrs-26.1.0 cachecontrol-0.14.4 certifi-2026.7.22 cffi-2.1.1 charset_normalizer-3.5.1 cryptography-50.0.1 deprecation-2.1.0 firebase-admin-7.7.0 frozenlist-1.8.0 google-api-core-2.39.0 google-auth-2.58.1 google-cloud-core-2.7.0 google-cloud-firestore-2.32.0 google-cloud-storage-3.15.0 google-crc32c-1.9.0 google-resumable-media-2.10.2 googleapis-common-protos-1.75.4 grpcio-1.84.0 grpcio-status-1.84.0 h11-0.16.0 h2-4.4.1 hpack-4.2.0 httpcore-1.0.9 httpx-0.28.1 hyperframe-6.1.0 idna-3.20 kurigram-2.2.26 msgpack-1.2.2 multidict-6.9.1 ntgcalls-3.0.0 opentelemetry-api-1.45.0 packaging-26.3 pillow-12.3.0 propcache-0.5.4 proto-plus-1.28.4 protobuf-7.36.2 psutil-7.2.2 py-tgcalls-3.0.0 py-yt-search-0.8.0 pyaes-1.6.1 pyasn1-0.6.4 pyasn1-modules-0.4.2 pycparser-3.0 pyjwt-2.15.0 pytgcrypto-1.2.12 python-dotenv-1.2.3 python-socks-3.1.1 requests-2.34.2 typing_extensions-4.16.0 urllib3-2.8.0 yarl-1.25.1 yt-dlp-2026.8.19
 === import check ===
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-ModuleNotFoundError: No module named 'kurigram'
+deps OK — pyrogram 2.2.26
+=== pip list (top) ===
+Package                  Version
+------------------------ ---------
+aiohappyeyeballs         2.7.1
+aiohttp                  3.14.3
+aiosignal                1.4.0
+anyio                    4.15.1
+attrs                    26.1.0
+CacheControl             0.14.4
+certifi                  2026.7.22
+cffi                     2.1.1
+charset-normalizer       3.5.1
+cryptography             50.0.1
+deprecation              2.1.0
+firebase_admin           7.7.0
+frozenlist               1.8.0
+google-api-core          2.39.0
+google-auth              2.58.1
+google-cloud-core        2.7.0
+google-cloud-firestore   2.32.0
+google-cloud-storage     3.15.0
+google-crc32c            1.9.0
+google-resumable-media   2.10.2
+googleapis-common-protos 1.75.4
+grpcio                   1.84.0
+grpcio-status            1.84.0
+h11                      0.16.0
+h2                       4.4.1
+hpack                    4.2.0
+httpcore                 1.0.9
+httpx                    0.28.1
+hyperframe               6.1.0
+idna                     3.20
+Kurigram                 2.2.26
+msgpack                  1.2.2
+multidict                6.9.1
+ntgcalls                 3.0.0
+opentelemetry-api        1.45.0
+packaging                26.3
+pillow                   12.3.0
+pip                      26.2.1
 
 =========== BOT log.txt (last 200) ===========
-(log.txt nahi bana)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 7207, in start
+    await message.reply_photo(
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/sync.py", line 53, in async_to_sync_wrap
+    coroutine = function(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Message.reply_photo() got an unexpected keyword argument 'quote'
+[27-Sep-26 12:43:54 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in MessageHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3838, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 7207, in start
+    await message.reply_photo(
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/sync.py", line 53, in async_to_sync_wrap
+    coroutine = function(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Message.reply_photo() got an unexpected keyword argument 'quote'
+[27-Sep-26 12:43:56 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in MessageHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3838, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 7207, in start
+    await message.reply_photo(
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/sync.py", line 53, in async_to_sync_wrap
+    coroutine = function(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Message.reply_photo() got an unexpected keyword argument 'quote'
+[27-Sep-26 12:45:20 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in MessageHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3838, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 7207, in start
+    await message.reply_photo(
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/sync.py", line 53, in async_to_sync_wrap
+    coroutine = function(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Message.reply_photo() got an unexpected keyword argument 'quote'
+[27-Sep-26 12:45:20 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in MessageHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3838, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 4504, in wrapper
+    return await func(_, update, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 9041, in _admin_panel
+    await m.reply_text(
+          ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/sync.py", line 53, in async_to_sync_wrap
+    coroutine = function(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Message.reply() got an unexpected keyword argument 'quote'
+[27-Sep-26 12:48:14 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in MessageHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3838, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 4504, in wrapper
+    return await func(_, update, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 9041, in _admin_panel
+    await m.reply_text(
+          ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/sync.py", line 53, in async_to_sync_wrap
+    coroutine = function(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Message.reply() got an unexpected keyword argument 'quote'
+[27-Sep-26 12:48:31 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in MessageHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3838, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 7183, in _help
+    await m.reply_text(
+          ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/sync.py", line 53, in async_to_sync_wrap
+    coroutine = function(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Message.reply() got an unexpected keyword argument 'quote'
+[27-Sep-26 12:49:09 - INFO] - MusicBot: 📦 [Backup] 'manual' snapshot: database_backup_manual_20260927_124909615.json.gz (252 B)
+[27-Sep-26 12:49:35 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in MessageHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3838, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 4504, in wrapper
+    return await func(_, update, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 9041, in _admin_panel
+    await m.reply_text(
+          ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/sync.py", line 53, in async_to_sync_wrap
+    coroutine = function(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Message.reply() got an unexpected keyword argument 'quote'
+[27-Sep-26 12:49:37 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in MessageHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3838, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 7207, in start
+    await message.reply_photo(
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/sync.py", line 53, in async_to_sync_wrap
+    coroutine = function(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Message.reply_photo() got an unexpected keyword argument 'quote'
+[27-Sep-26 12:49:58 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in MessageHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3838, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 7207, in start
+    await message.reply_photo(
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/sync.py", line 53, in async_to_sync_wrap
+    coroutine = function(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Message.reply_photo() got an unexpected keyword argument 'quote'
+[27-Sep-26 12:50:02 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in MessageHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3838, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 7183, in _help
+    await m.reply_text(
+          ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/sync.py", line 53, in async_to_sync_wrap
+    coroutine = function(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Message.reply() got an unexpected keyword argument 'quote'
+[27-Sep-26 12:50:09 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in MessageHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3838, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 7183, in _help
+    await m.reply_text(
+          ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/sync.py", line 53, in async_to_sync_wrap
+    coroutine = function(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Message.reply() got an unexpected keyword argument 'quote'
+[27-Sep-26 12:50:11 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in MessageHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3838, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 7183, in _help
+    await m.reply_text(
+          ^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/sync.py", line 53, in async_to_sync_wrap
+    coroutine = function(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Message.reply() got an unexpected keyword argument 'quote'
+[27-Sep-26 12:50:42 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in MessageHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3838, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 7207, in start
+    await message.reply_photo(
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/sync.py", line 53, in async_to_sync_wrap
+    coroutine = function(*args, **kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Message.reply_photo() got an unexpected keyword argument 'quote'
 
 =========== data/ ===========
+data:
+total 8.0K
+drwxr-xr-x 2 runner runner 4.0K Sep 27 12:49 backups
+-rw-r--r-- 1 runner runner  445 Sep 27 12:49 database.json
+
+data/backups:
+total 8.0K
+-rw-r--r-- 1 runner runner 252 Sep 27 12:49 database_backup_manual_20260927_124909615.json.gz
+-rw-r--r-- 1 runner runner 226 Sep 27 12:41 database_backup_startup_20260927_124157627.json.gz
