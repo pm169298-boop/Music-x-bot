@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if command -v uv &>/dev/null; then
+    exec uv run python3 -m anony
+else
+    exec python3 -m anony
+fi
