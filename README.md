@@ -1,50 +1,50 @@
-# 🎵 Music-x-bot (Telegram Voice Chat Music Bot)
+# 🎵 Music-x-bot (All-in-One Single File Telegram VC Music Bot)
 
-Telegram Groups me high-quality music aur video stream karne ke liye ek powerful aur fast **Telegram VC Music Bot** (AnonX / LunaX architecture par based).
+Telegram Groups ke Voice Chat / Video Chat me high-quality music aur video stream karne ke liye ek **Single-File (`main.py`) Telegram Music Bot**, jisme **Firebase Realtime Database** aur **Local VPS Storage + Automated Backup Mode** dono inbuilt hain!
 
 ---
 
-## 📖 Bot Ka Concept (Bot Kaise Kaam Karta Hai? / How It Works)
+## ✨ Features (Khaas Baatein)
 
-Telegram Voice Chat me music play karne ka process normal bots se thoda alag hota hai:
-
-1. **Telegram Bot (`BOT_TOKEN`)**:
-   - Ye wo bot hai jo `@BotFather` se banta hai (jaise `@your_music_bot`).
-   - Ye group me users ke commands receive karta hai: `/play`, `/pause`, `/skip`, `/stop`, aur inline buttons dikhata hai.
-2. **Assistant / Userbot (`SESSION` - String Session)**:
-   - Telegram ke architecture me standard bots direct Voice Chat me bol ya gaana chala nahi sakte.
-   - Isliye ek real Telegram account (Assistant Account) chahiye hota hai. Bot us account ke through Voice Chat me enter hota hai aur FFmpeg / Py-TgCalls ke zariye song stream karta hai.
-3. **MongoDB Database (`MONGO_URL`)**:
-   - Playlists, group settings, language preferences aur sudo users ka data MongoDB me save hota hai.
-   - Iska free cluster `cloud.mongodb.com` par banta hai.
-4. **Logger Group (`LOGGER_ID`)**:
-   - Ek private Telegram group jahan Bot aur Assistant dono ko Admin banaya jata hai. Yahan bot start hone ka status, logs aur errors aate hain.
+- ⚡ **Single-File Code (`main.py`):** 80+ files ki jhanjhat khatam! Pura bot ek single, clean aur fully documented `main.py` file me chalte hai.
+- 🗄️ **Hybrid Database System (Firebase + Local VPS):**
+  - **Firebase Mode:** Agar aap `FIREBASE_DATABASE_URL` aur credentials dete hain, to data Firebase Realtime Database me cloud par save hota hai.
+  - **Local VPS Backup Mode (Default):** Agar Firebase set nahi hai, to data automatically VPS par `data/database.json` me save hota hai.
+- 📦 **Automated Backup System:**
+  - VPS par har 6 ghante me auto-snapshot banta hai (`data/backups/`).
+  - Auto-backup seedha aapke Telegram Log Group (`LOGGER_ID`) me send ho jata hai.
+  - `/backup` command se Bot Owner kabhi bhi Telegram me latest database backup document mangwa sakta hai.
+- 🎧 **Audio & Video Streaming:** YouTube se audio (`/play`) aur 720p HD video (`/vplay`) dono stream karta hai.
+- 🎛️ **Inline Interactive Buttons:** Pause, Resume, Skip, Stop ke buttons gaana play hote waqt direct chat me aate hain.
+- 🍪 **YouTube Cookies Support:** Datacenter IP blocking se bachne ke liye `cookies.txt` support.
 
 ---
 
 ## 🔑 Zaroori Credentials (Prerequisites / Kya Kya Chahiye)
 
-Bot run karne se pehle ye 7 cheezein nikaal kar rakh lein:
-
+### 1. Telegram Credentials (Mandatory)
 | Variable | Description | Kahan se milega? |
 | :--- | :--- | :--- |
 | **`API_ID`** | Telegram App ID (Integer) | [my.telegram.org](https://my.telegram.org) par login karke **API Development Tools** se lein. |
 | **`API_HASH`** | Telegram App Hash (String) | [my.telegram.org](https://my.telegram.org) par API ID ke sath milega. |
-| **`BOT_TOKEN`** | Telegram Bot Token | Telegram par [@BotFather](https://t.me/BotFather) ko `/newbot` bhej kar bot banayein aur token copy karein. |
-| **`OWNER_ID`** | Aapka numeric Telegram User ID | Telegram par [@userinfobot](https://t.me/userinfobot) ko start karein, wo aapki numeric ID dega. |
-| **`MONGO_URL`** | MongoDB connection string | [cloud.mongodb.com](https://cloud.mongodb.com) par free account banayein -> Free Cluster banayein -> `mongodb+srv://...` URL copy karein. |
-| **`LOGGER_ID`** | Private Log Group ID | Telegram me ek private group banayein, usme Bot aur Assistant account ko add karke Admin banayein, fir group ID nikaalein (usually `-100...` se start hoti hai). |
-| **`SESSION`** | Pyrogram v2 String Session | Telegram par [@StringFatherBot](https://t.me/StringFatherBot) ya Pyrogram generator se apne Assistant account ka session string banayein. |
+| **`BOT_TOKEN`** | Telegram Bot Token | Telegram par [@BotFather](https://t.me/BotFather) se `/newbot` bhej kar banayein. |
+| **`SESSION`** | Pyrogram v2 String Session | Telegram par [@StringFatherBot](https://t.me/StringFatherBot) par apne Assistant account ka session generate karein. |
+| **`OWNER_ID`** | Aapka Telegram numeric User ID | Telegram par [@userinfobot](https://t.me/userinfobot) ko `/start` karein. |
+| **`LOGGER_ID`** | Private Log Group ID | Ek private Telegram group banayein, Bot aur Assistant dono ko Admin banayein, fir group ID lein (e.g. `-100...`). Yahan auto-backups aayenge! |
+
+### 2. Database Options (Firebase ya Local VPS)
+- **Option 1 (Firebase):** Agar cloud database chahiye to Firebase Console me Realtime Database banayein aur `.env` me `FIREBASE_DATABASE_URL` aur Service Account key (`firebase_key.json` ya raw JSON string) set karein.
+- **Option 2 (Local VPS with Auto-Backup):** Kuchh set karne ki zaroorat nahi! Agar Firebase variables blank hain, to bot automatically VPS pe local storage mode me chalega aur backups banata rahega.
 
 ---
 
-## 🚀 Run Kaise Karein (Step-by-Step Deployment Guide)
+## 🚀 Setup & Run Kaise Karein
 
-### Tarika 1: VPS / Linux Server (Sabse Best & 24/7 Uptime)
+### Tarika 1: Automated VPS Setup (Recommended)
 
 Agar aapke paas Ubuntu/Debian VPS hai:
 
-1. **Repository clone karein:**
+1. **Repo clone karein:**
    ```bash
    git clone https://github.com/pm169298-boop/Music-x-bot.git
    cd Music-x-bot
@@ -54,126 +54,105 @@ Agar aapke paas Ubuntu/Debian VPS hai:
    ```bash
    bash setup
    ```
-   *Ye script automatic Python, FFmpeg, Deno, uv aur sari dependencies install kar dega.*
+   *Ye script Python3, FFmpeg, pip packages install karega aur aapse values puch kar `.env` file automatic bana dega.*
 
-3. **Credentials enter karein:**
-   Setup ke end me aapse `API_ID`, `API_HASH`, `BOT_TOKEN`, `OWNER_ID`, `MONGO_URL`, `LOGGER_ID`, aur `SESSION` pucha jayega. Enter kar dein.
-
-4. **Bot start karein:**
+3. **Bot start karein:**
    ```bash
    bash start
    ```
+   ya direct:
+   ```bash
+   python3 main.py
+   ```
 
-5. **24/7 background me chalane ke liye (`tmux` ya `screen` use karein):**
+4. **24/7 background me chalane ke liye:**
    ```bash
    screen -S musicbot
-   bash start
-   # Screen detach karne ke liye: Ctrl + A fir D dabayein
+   python3 main.py
    ```
+   *(Screen detach karne ke liye keyboard par `Ctrl + A` fir `D` dabayein).*
 
 ---
 
-### Tarika 2: Local PC (Windows / Linux / Mac)
+### Tarika 2: Manual PC / Server Setup
 
-1. **Prerequisites install karein:**
-   - [Python 3.10+](https://www.python.org/downloads/)
-   - [FFmpeg](https://ffmpeg.org/download.html) (System PATH me add hona zaroori hai)
-   - Git
-
-2. **Repo clone karein:**
-   ```bash
-   git clone https://github.com/pm169298-boop/Music-x-bot.git
-   cd Music-x-bot
-   ```
-
-3. **Environment variables set karein:**
-   - `sample.env` file ko copy karke `.env` naam dein:
-     ```bash
-     cp sample.env .env
-     ```
-   - `.env` file ko notepad/editor me open karein aur apni details fill karein:
-     ```env
-     API_ID=12345678
-     API_HASH=abcdef1234567890abcdef1234567890
-     BOT_TOKEN=123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ
-     OWNER_ID=123456789
-     LOGGER_ID=-1001234567890
-     MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority
-     SESSION=BQGabcdef...
-     ```
-
-4. **Dependencies install karein:**
+1. **Prerequisites:** Python 3.10+ aur FFmpeg install karein.
+2. **Dependencies install karein:**
    ```bash
    pip install -r requirements.txt
    ```
-   *(Ya agar `uv` use karte hain to: `uv sync`)*
-
-5. **Bot start karein:**
+3. **Configuration file (.env) banayein:**
+   `sample.env` ko copy karke `.env` banayein:
    ```bash
-   python3 -m anony
+   cp sample.env .env
    ```
-   *(Windows me: `python -m anony` ya `bash start`)*
+   Aur apni details daalein:
+   ```env
+   API_ID=12345678
+   API_HASH=abcdef1234567890abcdef1234567890
+   BOT_TOKEN=123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ
+   SESSION=BQGabcdef...
+   OWNER_ID=123456789
+   LOGGER_ID=-1001234567890
+
+   # Firebase (Optional - Chhod sakte hain agar local VPS save chahiye)
+   FIREBASE_DATABASE_URL=
+   FIREBASE_CREDENTIALS=firebase_key.json
+   ```
+4. **Run karein:**
+   ```bash
+   python3 main.py
+   ```
 
 ---
 
 ### Tarika 3: Docker Deployment
 
-1. `.env` file banayein aur usme apni values daalein.
-2. Build aur Run karein:
-   ```bash
-   docker build -t musicbot .
-   docker run -d --name musicbot --env-file .env musicbot
-   ```
+```bash
+docker build -t musicbot .
+docker run -d --name musicbot --env-file .env musicbot
+```
 
 ---
 
-## 📱 Telegram Group Me Kaise Use Karein
+## 🎮 Telegram Group Me Kaise Use Karein
 
-Jab bot run ho jaye:
-
-1. **Telegram par naya ya existing group kholein.**
-2. **Voice Chat (Video Chat) start karein.**
-3. **Bot ko group me invite karein aur Admin banayein** (Manage Voice Chats / Video Chats permission ON honi chahiye).
-4. **Assistant account (jiska `SESSION` string banaya tha) ko group me add karein.**
-5. **Group chat me command bhejein:**
+1. Group me **Voice Chat (Video Chat)** start karein.
+2. Apne **Bot** aur **Assistant Account** dono ko group me add karein aur Bot ko **Admin** banayein.
+3. Group me command bhejein:
    ```text
-   /play Believer
+   /play Kesariya
    ```
-   ya YouTube link:
+   ya video ke liye:
    ```text
-   /play https://www.youtube.com/watch?v=7wtfhZwyrcc
+   /vplay https://www.youtube.com/watch?v=BddP6PYo2gs
    ```
-6. Bot gaana search karega, Assistant account Voice Chat me join karega, aur music stream hona shuru ho jayega! 🎶
+4. Assistant account Voice Chat join karega aur gaana bajne lagega!
 
 ---
 
-## 🕹️ Useful Commands
+## 🕹️ Commands List
 
 | Command | Action |
 | :--- | :--- |
-| `/play <song name ya link>` | Voice chat me audio gaana play karega |
-| `/vplay <song name ya link>` | Voice chat me video song play karega |
+| `/play <song/link>` | Voice chat me audio play karega |
+| `/vplay <song/link>` | Voice chat me video play karega |
 | `/pause` | Current gaana pause karega |
 | `/resume` | Paused gaana resume karega |
-| `/skip` | Agla gaana play karega (next in queue) |
-| `/stop` | Gaana band karega aur assistant VC chhod dega |
-| `/queue` | Queue me kaun-kaun se gaane hain list dikhayega |
-| `/seek <seconds>` | Gaane ko aage ya peeche seek karega |
-| `/ping` | Bot ka response time aur system status dikhayega |
-| `/help` | Sabhi commands ki list dekhne ke liye |
+| `/skip` | Agla gaana play karega |
+| `/stop` ya `/end` | Gaana band karke Assistant ko VC se bahar nikal dega |
+| `/queue` | Upcoming gaano ki list dikhayega |
+| `/ping` | Bot ka latency aur response time check karega |
+| `/stats` | System CPU, RAM, Total songs played aur active database mode dikhayega |
+| `/backup` | **(Owner only)** Latest database backup file Telegram chat me bhej dega |
 
 ---
 
-## ⚠️ Common Problems & Fixes (Troubleshooting)
+## 📦 Backup Mode Kaise Kaam Karta Hai?
 
-1. **`Bot has failed to access the log group` ya `Please promote the bot as an admin in logger group`:**
-   - **Fix:** Aapne `LOGGER_ID` galat daala hai ya us private group me Bot ko add karke Admin nahi banaya. Make sure bot is an admin in that group.
-2. **`Assistant failed to send message in log group`:**
-   - **Fix:** Assistant account (jiski `SESSION` string hai) ko bhi us Logger Group me add karein.
-3. **`Missing required environment variables`:**
-   - **Fix:** `.env` file me 7 zaroori values me se koi chhoot gayi hai. `sample.env` check karein.
-4. **Voice Chat me sound nahi aa rahi:**
-   - **Fix:** Server par `ffmpeg` installed hai ya nahi check karein (`sudo apt-get install -y ffmpeg`). Group me voice chat active honi chahiye.
+1. **Auto-Save:** Har command, naya chat aur song count local file `data/database.json` me turant atomically save hota hai taaki crash hone par bhi file corrupt na ho.
+2. **Scheduled Backups:** Har 6 ghante me ek naya timestamped snapshot `data/backups/database_backup_YYYYMMDD_HHMMSS.json` ban jata hai aur agar `LOGGER_ID` set hai, to seedha Telegram logger group me document ban kar send ho jata hai.
+3. **Manual Backup (`/backup`):** Bot owner kisi bhi waqt bot ko `/backup` bhej kar instant backup file mangwa sakta hai.
 
 ---
 
