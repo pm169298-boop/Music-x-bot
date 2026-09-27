@@ -3,215 +3,195 @@ Python 3.11.16
 pip 26.2.1 from /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pip (python 3.11)
 Linux runnervmtr4k5 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
 /home/runner/work/Music-x-bot/Music-x-bot
-total 716
-drwxr-xr-x 7 runner runner   4096 Sep 27 13:02 .
-drwxr-xr-x 3 runner runner   4096 Sep 27 13:02 ..
--rw-r--r-- 1 runner runner    211 Sep 27 13:02 .dockerignore
-drwxr-xr-x 7 runner runner   4096 Sep 27 13:02 .git
-drwxr-xr-x 3 runner runner   4096 Sep 27 13:02 .github
--rw-r--r-- 1 runner runner    519 Sep 27 13:02 .gitignore
--rw-r--r-- 1 runner runner   1137 Sep 27 13:02 Dockerfile
--rw-r--r-- 1 runner runner   1079 Sep 27 13:02 LICENSE
--rw-r--r-- 1 runner runner     24 Sep 27 13:02 Procfile
--rw-r--r-- 1 runner runner  16630 Sep 27 13:02 README.md
-drwxr-xr-x 2 runner runner   4096 Sep 27 13:02 ci-artifacts
-drwxr-xr-x 2 runner runner   4096 Sep 27 13:02 locales
--rw-r--r-- 1 runner runner 639932 Sep 27 13:02 main.py
-drwxr-xr-x 2 runner runner   4096 Sep 27 13:02 plugins
--rw-r--r-- 1 runner runner   1112 Sep 27 13:02 requirements.txt
--rw-r--r-- 1 runner runner   5376 Sep 27 13:02 sample.env
--rwxr-xr-x 1 runner runner   3538 Sep 27 13:02 setup
--rwxr-xr-x 1 runner runner    113 Sep 27 13:02 start
+total 776
+drwxr-xr-x 7 runner runner   4096 Sep 27 13:48 .
+drwxr-xr-x 3 runner runner   4096 Sep 27 13:48 ..
+-rw-r--r-- 1 runner runner    211 Sep 27 13:48 .dockerignore
+drwxr-xr-x 7 runner runner   4096 Sep 27 13:48 .git
+drwxr-xr-x 3 runner runner   4096 Sep 27 13:48 .github
+-rw-r--r-- 1 runner runner    519 Sep 27 13:48 .gitignore
+-rw-r--r-- 1 runner runner   1137 Sep 27 13:48 Dockerfile
+-rw-r--r-- 1 runner runner   1079 Sep 27 13:48 LICENSE
+-rw-r--r-- 1 runner runner     24 Sep 27 13:48 Procfile
+-rw-r--r-- 1 runner runner  18991 Sep 27 13:48 README.md
+drwxr-xr-x 2 runner runner   4096 Sep 27 13:48 ci-artifacts
+drwxr-xr-x 2 runner runner   4096 Sep 27 13:48 locales
+-rw-r--r-- 1 runner runner 702585 Sep 27 13:48 main.py
+drwxr-xr-x 2 runner runner   4096 Sep 27 13:48 plugins
+-rw-r--r-- 1 runner runner   1112 Sep 27 13:48 requirements.txt
+-rw-r--r-- 1 runner runner   6559 Sep 27 13:48 sample.env
+-rwxr-xr-x 1 runner runner   3538 Sep 27 13:48 setup
+-rwxr-xr-x 1 runner runner    113 Sep 27 13:48 start
 === pip upgrade ===
 Requirement already satisfied: pip in /opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages (26.2.1)
 === pip install -r requirements.txt ===
 Collecting kurigram>=2.2.26 (from -r requirements.txt (line 8))
-  Downloading kurigram-2.2.26-py3-none-any.whl.metadata (5.9 kB)
+  Using cached kurigram-2.2.26-py3-none-any.whl.metadata (5.9 kB)
 Collecting pytgcrypto>=1.2.12 (from -r requirements.txt (line 9))
-  Downloading pytgcrypto-1.2.12-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+  Using cached pytgcrypto-1.2.12-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
 Collecting py-tgcalls>=2.2.11 (from -r requirements.txt (line 12))
-  Downloading py_tgcalls-3.0.0-py3-none-any.whl.metadata (5.2 kB)
+  Using cached py_tgcalls-3.0.0-py3-none-any.whl.metadata (5.2 kB)
 Collecting yt-dlp>=2026.3.17 (from -r requirements.txt (line 15))
-  Downloading yt_dlp-2026.8.19-py3-none-any.whl.metadata (183 kB)
+  Using cached yt_dlp-2026.8.19-py3-none-any.whl.metadata (183 kB)
 Collecting py-yt-search>=0.8.0 (from -r requirements.txt (line 16))
-  Downloading py_yt_search-0.8.0-py3-none-any.whl.metadata (7.3 kB)
+  Using cached py_yt_search-0.8.0-py3-none-any.whl.metadata (7.3 kB)
 Collecting pillow>=10.0.0 (from -r requirements.txt (line 19))
-  Downloading pillow-12.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+  Using cached pillow-12.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
 Collecting python-dotenv>=1.0.0 (from -r requirements.txt (line 22))
-  Downloading python_dotenv-1.2.3-py3-none-any.whl.metadata (29 kB)
+  Using cached python_dotenv-1.2.3-py3-none-any.whl.metadata (29 kB)
 Collecting psutil>=5.9.0 (from -r requirements.txt (line 23))
-  Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+  Using cached psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
 Collecting aiohttp>=3.9.0 (from -r requirements.txt (line 24))
-  Downloading aiohttp-3.14.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+  Using cached aiohttp-3.14.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
 Collecting firebase-admin>=6.0.0 (from -r requirements.txt (line 29))
-  Downloading firebase_admin-7.7.0-py3-none-any.whl.metadata (1.8 kB)
+  Using cached firebase_admin-7.7.0-py3-none-any.whl.metadata (1.8 kB)
 Collecting pyaes>=1.2.0 (from kurigram>=2.2.26->-r requirements.txt (line 8))
-  Downloading pyaes-1.6.1.tar.gz (28 kB)
-  Installing build dependencies: started
-  Installing build dependencies: finished with status 'done'
-  Getting requirements to build wheel: started
-  Getting requirements to build wheel: finished with status 'done'
-  Preparing metadata (pyproject.toml): started
-  Preparing metadata (pyproject.toml): finished with status 'done'
+  Using cached pyaes-1.6.1-py3-none-any.whl
 Collecting python-socks>=2.4.0 (from python-socks[asyncio]>=2.4.0->kurigram>=2.2.26->-r requirements.txt (line 8))
-  Downloading python_socks-3.1.1-py3-none-any.whl.metadata (8.9 kB)
+  Using cached python_socks-3.1.1-py3-none-any.whl.metadata (8.9 kB)
 Collecting ntgcalls<4.0.0,>=3.0.0 (from py-tgcalls>=2.2.11->-r requirements.txt (line 12))
-  Downloading ntgcalls-3.0.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (14 kB)
+  Using cached ntgcalls-3.0.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (14 kB)
 Collecting deprecation (from py-tgcalls>=2.2.11->-r requirements.txt (line 12))
-  Downloading deprecation-2.1.0-py2.py3-none-any.whl.metadata (4.6 kB)
+  Using cached deprecation-2.1.0-py2.py3-none-any.whl.metadata (4.6 kB)
 Collecting aiohappyeyeballs>=2.5.0 (from aiohttp>=3.9.0->-r requirements.txt (line 24))
-  Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl.metadata (5.9 kB)
+  Using cached aiohappyeyeballs-2.7.1-py3-none-any.whl.metadata (5.9 kB)
 Collecting aiosignal>=1.4.0 (from aiohttp>=3.9.0->-r requirements.txt (line 24))
-  Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+  Using cached aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
 Collecting attrs>=17.3.0 (from aiohttp>=3.9.0->-r requirements.txt (line 24))
-  Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+  Using cached attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
 Collecting frozenlist>=1.1.1 (from aiohttp>=3.9.0->-r requirements.txt (line 24))
-  Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+  Using cached frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
 Collecting multidict<7.0,>=4.5 (from aiohttp>=3.9.0->-r requirements.txt (line 24))
-  Downloading multidict-6.9.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+  Using cached multidict-6.9.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
 Collecting propcache>=0.2.0 (from aiohttp>=3.9.0->-r requirements.txt (line 24))
-  Downloading propcache-0.5.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (25 kB)
+  Using cached propcache-0.5.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (25 kB)
 Collecting typing_extensions>=4.4 (from aiohttp>=3.9.0->-r requirements.txt (line 24))
-  Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+  Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
 Collecting yarl<2.0,>=1.17.0 (from aiohttp>=3.9.0->-r requirements.txt (line 24))
-  Downloading yarl-1.25.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (111 kB)
+  Using cached yarl-1.25.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (111 kB)
 Collecting idna>=2.0 (from yarl<2.0,>=1.17.0->aiohttp>=3.9.0->-r requirements.txt (line 24))
-  Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+  Using cached idna-3.20-py3-none-any.whl.metadata (7.2 kB)
 Collecting cachecontrol>=0.14.3 (from firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading cachecontrol-0.14.4-py3-none-any.whl.metadata (3.1 kB)
+  Using cached cachecontrol-0.14.4-py3-none-any.whl.metadata (3.1 kB)
 Collecting google-api-core<3.0.0dev,>=2.25.1 (from google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading google_api_core-2.39.0-py3-none-any.whl.metadata (3.2 kB)
+  Using cached google_api_core-2.39.0-py3-none-any.whl.metadata (3.2 kB)
 Collecting google-cloud-firestore>=2.21.0 (from firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading google_cloud_firestore-2.32.0-py3-none-any.whl.metadata (9.5 kB)
+  Using cached google_cloud_firestore-2.32.0-py3-none-any.whl.metadata (9.5 kB)
 Collecting google-cloud-storage>=3.1.1 (from firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading google_cloud_storage-3.15.0-py3-none-any.whl.metadata (14 kB)
+  Using cached google_cloud_storage-3.15.0-py3-none-any.whl.metadata (14 kB)
 Collecting pyjwt>=2.10.1 (from pyjwt[crypto]>=2.10.1->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading pyjwt-2.15.0-py3-none-any.whl.metadata (3.5 kB)
+  Using cached pyjwt-2.15.0-py3-none-any.whl.metadata (3.5 kB)
 Collecting httpx==0.28.1 (from httpx[http2]==0.28.1->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+  Using cached httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
 Collecting anyio (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading anyio-4.15.1-py3-none-any.whl.metadata (4.7 kB)
+  Using cached anyio-4.15.1-py3-none-any.whl.metadata (4.7 kB)
 Collecting certifi (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+  Using cached certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
 Collecting httpcore==1.* (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+  Using cached httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
 Collecting h2<5,>=3 (from httpx[http2]==0.28.1->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading h2-4.4.1-py3-none-any.whl.metadata (3.8 kB)
+  Using cached h2-4.4.1-py3-none-any.whl.metadata (3.8 kB)
 Collecting googleapis-common-protos<2.0.0,>=1.69.2 (from google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading googleapis_common_protos-1.75.4-py3-none-any.whl.metadata (8.5 kB)
+  Using cached googleapis_common_protos-1.75.4-py3-none-any.whl.metadata (8.5 kB)
 Collecting protobuf<8.0.0,>=6.33.5 (from google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading protobuf-7.36.2-cp310-abi3-manylinux2014_x86_64.whl.metadata (595 bytes)
+  Using cached protobuf-7.36.2-cp310-abi3-manylinux2014_x86_64.whl.metadata (595 bytes)
 Collecting proto-plus<2.0.0,>=1.26.1 (from google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading proto_plus-1.28.4-py3-none-any.whl.metadata (2.2 kB)
+  Using cached proto_plus-1.28.4-py3-none-any.whl.metadata (2.2 kB)
 Collecting google-auth<3.0.0,>=2.14.1 (from google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading google_auth-2.58.1-py3-none-any.whl.metadata (6.0 kB)
+  Using cached google_auth-2.58.1-py3-none-any.whl.metadata (6.0 kB)
 Collecting requests<3.0.0,>=2.33.0 (from google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+  Using cached requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
 Collecting opentelemetry-api<2.0.0,>=1.44.0 (from google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading opentelemetry_api-1.45.0-py3-none-any.whl.metadata (1.4 kB)
+  Using cached opentelemetry_api-1.45.0-py3-none-any.whl.metadata (1.4 kB)
 Collecting grpcio<2.0.0,>=1.59.0 (from google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading grpcio-1.84.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.8 kB)
+  Using cached grpcio-1.84.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.8 kB)
 Collecting grpcio-status<2.0.0,>=1.59.0 (from google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading grpcio_status-1.84.0-py3-none-any.whl.metadata (1.3 kB)
+  Using cached grpcio_status-1.84.0-py3-none-any.whl.metadata (1.3 kB)
 Collecting pyasn1-modules>=0.2.1 (from google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+  Using cached pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
 Collecting cryptography>=38.0.3 (from google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading cryptography-50.0.1-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (4.3 kB)
+  Using cached cryptography-50.0.1-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (4.3 kB)
 Collecting hyperframe<7,>=6.1 (from h2<5,>=3->httpx[http2]==0.28.1->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading hyperframe-6.1.0-py3-none-any.whl.metadata (4.3 kB)
+  Using cached hyperframe-6.1.0-py3-none-any.whl.metadata (4.3 kB)
 Collecting hpack<5,>=4.2 (from h2<5,>=3->httpx[http2]==0.28.1->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading hpack-4.2.0-py3-none-any.whl.metadata (3.3 kB)
+  Using cached hpack-4.2.0-py3-none-any.whl.metadata (3.3 kB)
 Collecting h11>=0.16 (from httpcore==1.*->httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+  Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
 Collecting charset_normalizer<4,>=2 (from requests<3.0.0,>=2.33.0->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading charset_normalizer-3.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (45 kB)
+  Using cached charset_normalizer-3.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (45 kB)
 Collecting urllib3<3,>=1.26 (from requests<3.0.0,>=2.33.0->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading urllib3-2.8.0-py3-none-any.whl.metadata (7.4 kB)
+  Using cached urllib3-2.8.0-py3-none-any.whl.metadata (7.4 kB)
 Collecting msgpack<2.0.0,>=0.5.2 (from cachecontrol>=0.14.3->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading msgpack-1.2.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+  Using cached msgpack-1.2.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
 Collecting cffi>=2.0.0 (from cryptography>=38.0.3->google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
+  Using cached cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.5 kB)
 Collecting pycparser (from cffi>=2.0.0->cryptography>=38.0.3->google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+  Using cached pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
 Collecting google-cloud-core<3.0.0,>=2.0.0 (from google-cloud-firestore>=2.21.0->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading google_cloud_core-2.7.0-py3-none-any.whl.metadata (2.8 kB)
+  Using cached google_cloud_core-2.7.0-py3-none-any.whl.metadata (2.8 kB)
 Collecting google-resumable-media<3.0.0,>=2.7.2 (from google-cloud-storage>=3.1.1->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading google_resumable_media-2.10.2-py3-none-any.whl.metadata (2.2 kB)
+  Using cached google_resumable_media-2.10.2-py3-none-any.whl.metadata (2.2 kB)
 Collecting google-crc32c<2.0.0,>=1.6.0 (from google-cloud-storage>=3.1.1->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading google_crc32c-1.9.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.2 kB)
+  Using cached google_crc32c-1.9.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.2 kB)
 Collecting pyasn1<0.7.0,>=0.6.1 (from pyasn1-modules>=0.2.1->google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin>=6.0.0->-r requirements.txt (line 29))
-  Downloading pyasn1-0.6.4-py3-none-any.whl.metadata (8.4 kB)
+  Using cached pyasn1-0.6.4-py3-none-any.whl.metadata (8.4 kB)
 Collecting packaging (from deprecation->py-tgcalls>=2.2.11->-r requirements.txt (line 12))
-  Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
-Downloading kurigram-2.2.26-py3-none-any.whl (6.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.0/6.0 MB 107.1 MB/s  0:00:00
-Downloading pytgcrypto-1.2.12-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (51 kB)
-Downloading py_tgcalls-3.0.0-py3-none-any.whl (85 kB)
-Downloading ntgcalls-3.0.0-cp311-cp311-manylinux_2_28_x86_64.whl (42.3 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 42.3/42.3 MB 87.3 MB/s  0:00:00
-Downloading yt_dlp-2026.8.19-py3-none-any.whl (3.2 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 152.7 MB/s  0:00:00
-Downloading py_yt_search-0.8.0-py3-none-any.whl (684 kB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 684.9/684.9 kB 164.9 MB/s  0:00:00
-Downloading aiohttp-3.14.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.8 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 245.1 MB/s  0:00:00
-Downloading multidict-6.9.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (320 kB)
-Downloading yarl-1.25.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (117 kB)
-Downloading pillow-12.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.9 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 153.3 MB/s  0:00:00
-Downloading python_dotenv-1.2.3-py3-none-any.whl (22 kB)
-Downloading psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
-Downloading firebase_admin-7.7.0-py3-none-any.whl (144 kB)
-Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
-Downloading google_api_core-2.39.0-py3-none-any.whl (214 kB)
-Downloading google_auth-2.58.1-py3-none-any.whl (262 kB)
-Downloading googleapis_common_protos-1.75.4-py3-none-any.whl (307 kB)
-Downloading grpcio-1.84.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (7.2 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.2/7.2 MB 161.6 MB/s  0:00:00
-Downloading grpcio_status-1.84.0-py3-none-any.whl (14 kB)
-Downloading h2-4.4.1-py3-none-any.whl (62 kB)
-Downloading hpack-4.2.0-py3-none-any.whl (34 kB)
-Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
-Downloading hyperframe-6.1.0-py3-none-any.whl (13 kB)
-Downloading opentelemetry_api-1.45.0-py3-none-any.whl (60 kB)
-Downloading proto_plus-1.28.4-py3-none-any.whl (50 kB)
-Downloading protobuf-7.36.2-cp310-abi3-manylinux2014_x86_64.whl (343 kB)
-Downloading requests-2.34.2-py3-none-any.whl (73 kB)
-Downloading charset_normalizer-3.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (262 kB)
-Downloading idna-3.20-py3-none-any.whl (69 kB)
-Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
-Downloading urllib3-2.8.0-py3-none-any.whl (135 kB)
-Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
-Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
-Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
-Downloading cachecontrol-0.14.4-py3-none-any.whl (22 kB)
-Downloading msgpack-1.2.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (422 kB)
-Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
-Downloading cryptography-50.0.1-cp311-abi3-manylinux_2_34_x86_64.whl (4.7 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.7/4.7 MB 148.9 MB/s  0:00:00
-Downloading cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (217 kB)
-Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (231 kB)
-Downloading google_cloud_firestore-2.32.0-py3-none-any.whl (440 kB)
-Downloading google_cloud_core-2.7.0-py3-none-any.whl (31 kB)
-Downloading google_cloud_storage-3.15.0-py3-none-any.whl (343 kB)
-Downloading google_crc32c-1.9.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (36 kB)
-Downloading google_resumable_media-2.10.2-py3-none-any.whl (81 kB)
-Downloading h11-0.16.0-py3-none-any.whl (37 kB)
-Downloading propcache-0.5.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (235 kB)
-Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
-Downloading pyasn1-0.6.4-py3-none-any.whl (84 kB)
-Downloading pyjwt-2.15.0-py3-none-any.whl (33 kB)
-Downloading python_socks-3.1.1-py3-none-any.whl (49 kB)
-Downloading anyio-4.15.1-py3-none-any.whl (132 kB)
-Downloading deprecation-2.1.0-py2.py3-none-any.whl (11 kB)
-Downloading packaging-26.3-py3-none-any.whl (129 kB)
-Downloading pycparser-3.0-py3-none-any.whl (48 kB)
-Building wheels for collected packages: pyaes
-  Building wheel for pyaes (pyproject.toml): started
-  Building wheel for pyaes (pyproject.toml): finished with status 'done'
-  Created wheel for pyaes: filename=pyaes-1.6.1-py3-none-any.whl size=26422 sha256=574d6872210d913acbf786bd29c278196043ba255bf13231d842efe241dd4716
-  Stored in directory: /home/runner/.cache/pip/wheels/4e/52/33/010d0843550bffb6a591b11629070ae140c0ad4f53e68a3bd3
-Successfully built pyaes
+  Using cached packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+Using cached kurigram-2.2.26-py3-none-any.whl (6.0 MB)
+Using cached pytgcrypto-1.2.12-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (51 kB)
+Using cached py_tgcalls-3.0.0-py3-none-any.whl (85 kB)
+Using cached ntgcalls-3.0.0-cp311-cp311-manylinux_2_28_x86_64.whl (42.3 MB)
+Using cached yt_dlp-2026.8.19-py3-none-any.whl (3.2 MB)
+Using cached py_yt_search-0.8.0-py3-none-any.whl (684 kB)
+Using cached aiohttp-3.14.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.8 MB)
+Using cached multidict-6.9.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (320 kB)
+Using cached yarl-1.25.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (117 kB)
+Using cached pillow-12.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.9 MB)
+Using cached python_dotenv-1.2.3-py3-none-any.whl (22 kB)
+Using cached psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+Using cached firebase_admin-7.7.0-py3-none-any.whl (144 kB)
+Using cached httpx-0.28.1-py3-none-any.whl (73 kB)
+Using cached google_api_core-2.39.0-py3-none-any.whl (214 kB)
+Using cached google_auth-2.58.1-py3-none-any.whl (262 kB)
+Using cached googleapis_common_protos-1.75.4-py3-none-any.whl (307 kB)
+Using cached grpcio-1.84.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (7.2 MB)
+Using cached grpcio_status-1.84.0-py3-none-any.whl (14 kB)
+Using cached h2-4.4.1-py3-none-any.whl (62 kB)
+Using cached hpack-4.2.0-py3-none-any.whl (34 kB)
+Using cached httpcore-1.0.9-py3-none-any.whl (78 kB)
+Using cached hyperframe-6.1.0-py3-none-any.whl (13 kB)
+Using cached opentelemetry_api-1.45.0-py3-none-any.whl (60 kB)
+Using cached proto_plus-1.28.4-py3-none-any.whl (50 kB)
+Using cached protobuf-7.36.2-cp310-abi3-manylinux2014_x86_64.whl (343 kB)
+Using cached requests-2.34.2-py3-none-any.whl (73 kB)
+Using cached charset_normalizer-3.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (262 kB)
+Using cached idna-3.20-py3-none-any.whl (69 kB)
+Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Using cached urllib3-2.8.0-py3-none-any.whl (135 kB)
+Using cached aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
+Using cached aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+Using cached attrs-26.1.0-py3-none-any.whl (67 kB)
+Using cached cachecontrol-0.14.4-py3-none-any.whl (22 kB)
+Using cached msgpack-1.2.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (422 kB)
+Using cached certifi-2026.7.22-py3-none-any.whl (136 kB)
+Using cached cryptography-50.0.1-cp311-abi3-manylinux_2_34_x86_64.whl (4.7 MB)
+Using cached cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (217 kB)
+Using cached frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (231 kB)
+Using cached google_cloud_firestore-2.32.0-py3-none-any.whl (440 kB)
+Using cached google_cloud_core-2.7.0-py3-none-any.whl (31 kB)
+Using cached google_cloud_storage-3.15.0-py3-none-any.whl (343 kB)
+Using cached google_crc32c-1.9.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (36 kB)
+Using cached google_resumable_media-2.10.2-py3-none-any.whl (81 kB)
+Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+Using cached propcache-0.5.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (235 kB)
+Using cached pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+Using cached pyasn1-0.6.4-py3-none-any.whl (84 kB)
+Using cached pyjwt-2.15.0-py3-none-any.whl (33 kB)
+Using cached python_socks-3.1.1-py3-none-any.whl (49 kB)
+Using cached anyio-4.15.1-py3-none-any.whl (132 kB)
+Using cached deprecation-2.1.0-py2.py3-none-any.whl (11 kB)
+Using cached packaging-26.3-py3-none-any.whl (129 kB)
+Using cached pycparser-3.0-py3-none-any.whl (48 kB)
 Installing collected packages: pyaes, yt-dlp, urllib3, typing_extensions, python-socks, python-dotenv, pytgcrypto, pyjwt, pycparser, pyasn1, psutil, protobuf, propcache, pillow, packaging, ntgcalls, multidict, msgpack, idna, hyperframe, hpack, h11, google-crc32c, frozenlist, charset_normalizer, certifi, attrs, aiohappyeyeballs, yarl, requests, pyasn1-modules, proto-plus, opentelemetry-api, httpcore, h2, grpcio, googleapis-common-protos, google-resumable-media, deprecation, cffi, anyio, aiosignal, kurigram, httpx, grpcio-status, cryptography, cachecontrol, aiohttp, py-yt-search, py-tgcalls, google-auth, google-api-core, google-cloud-core, google-cloud-storage, google-cloud-firestore, firebase-admin
 
 Successfully installed aiohappyeyeballs-2.7.1 aiohttp-3.14.3 aiosignal-1.4.0 anyio-4.15.1 attrs-26.1.0 cachecontrol-0.14.4 certifi-2026.7.22 cffi-2.1.1 charset_normalizer-3.5.1 cryptography-50.0.1 deprecation-2.1.0 firebase-admin-7.7.0 frozenlist-1.8.0 google-api-core-2.39.0 google-auth-2.58.1 google-cloud-core-2.7.0 google-cloud-firestore-2.32.0 google-cloud-storage-3.15.0 google-crc32c-1.9.0 google-resumable-media-2.10.2 googleapis-common-protos-1.75.4 grpcio-1.84.0 grpcio-status-1.84.0 h11-0.16.0 h2-4.4.1 hpack-4.2.0 httpcore-1.0.9 httpx-0.28.1 hyperframe-6.1.0 idna-3.20 kurigram-2.2.26 msgpack-1.2.2 multidict-6.9.1 ntgcalls-3.0.0 opentelemetry-api-1.45.0 packaging-26.3 pillow-12.3.0 propcache-0.5.4 proto-plus-1.28.4 protobuf-7.36.2 psutil-7.2.2 py-tgcalls-3.0.0 py-yt-search-0.8.0 pyaes-1.6.1 pyasn1-0.6.4 pyasn1-modules-0.4.2 pycparser-3.0 pyjwt-2.15.0 pytgcrypto-1.2.12 python-dotenv-1.2.3 python-socks-3.1.1 requests-2.34.2 typing_extensions-4.16.0 urllib3-2.8.0 yarl-1.25.1 yt-dlp-2026.8.19
@@ -260,43 +240,83 @@ pillow                   12.3.0
 pip                      26.2.1
 
 =========== BOT log.txt (last 200) ===========
-[27-Sep-26 13:03:28 - INFO] - MusicBot: Embedded assets ready: 13 locales, 2 fonts.
-[27-Sep-26 13:03:28 - INFO] - MusicBot: Loaded languages: ar, de, en, es, fr, hi, ja, my, pa, pt, ru, tr, zh
-[27-Sep-26 13:03:28 - WARNING] - MusicBot: ⚠️ SESSION (assistant) set nahi hai — bot BOT-ONLY MODE me chalega. Commands, admin panel, logs, database aur backups sab kaam karenge, lekin /play (voice chat) ke liye assistant string session zaroori hai.
-[27-Sep-26 13:03:28 - INFO] - MusicBot: 💾 [Database] LOCAL VPS STORAGE MODE active — data: /home/runner/work/Music-x-bot/Music-x-bot/data/database.json | auto-backup: /home/runner/work/Music-x-bot/Music-x-bot/data/backups
-[27-Sep-26 13:03:28 - INFO] - MusicBot: Database cache loaded (0 chats, 0 users, 1 sudoers, mode=local).
-[27-Sep-26 13:03:37 - WARNING] - MusicBot: Bot LOGGER_ID (8276270776) access nahi kar paya: The chat_id "8276270776" belongs to a user
-[27-Sep-26 13:03:37 - INFO] - MusicBot: Bot started as @Droid_Gallery_Extractbot
-[27-Sep-26 13:03:37 - WARNING] - MusicBot: ⚠️ Koi assistant session start nahi hua — BOT-ONLY MODE active. Voice chat (/play) ke liye SESSION env var me assistant string session daalein.
-[27-Sep-26 13:03:37 - INFO] - MusicBot: PyTgCalls client(s) started: 0
-[27-Sep-26 13:03:37 - INFO] - MusicBot: ✅ External plugin 'example' loaded (3 handlers)
-[27-Sep-26 13:03:37 - INFO] - MusicBot: 🧩 External plugins: 1 loaded
-[27-Sep-26 13:03:37 - INFO] - MusicBot: Loaded 1 sudo users and 0 blacklisted users.
-[27-Sep-26 13:03:37 - INFO] - MusicBot: ⏰ [Backup] Auto-backup scheduler ON — har 6.00 ghante | retention 10 | delivery LOGGER_ID 8276270776
-[27-Sep-26 13:03:37 - INFO] - MusicBot: 📦 [Backup] 'startup' snapshot: database_backup_startup_20260927_130337726.json.gz (251 B)
-[27-Sep-26 13:03:39 - INFO] - MusicBot: Registered 55 command handlers.
-[27-Sep-26 13:03:39 - INFO] - MusicBot: Bot is live — database=💾 Local VPS Storage (Auto Backup ON), backups=/home/runner/work/Music-x-bot/Music-x-bot/data/backups
-[27-Sep-26 13:06:09 - INFO] - MusicBot: 📦 [Backup] 'manual' snapshot: database_backup_manual_20260927_130609802.json.gz (267 B)
-[27-Sep-26 13:07:17 - INFO] - MusicBot: 📦 [Backup] 'manual' snapshot: database_backup_manual_20260927_130717539.json.gz (267 B)
-[27-Sep-26 13:18:08 - ERROR] - pyrogram.connection.transport.tcp.tcp: Send failed: BrokenPipeError [Errno 32] Broken pipe
-[27-Sep-26 13:20:27 - ERROR] - pyrogram.connection.transport.tcp.tcp: Send failed: BrokenPipeError [Errno 32] Broken pipe
-[27-Sep-26 13:23:27 - INFO] - MusicBot: Stopping...
-[27-Sep-26 13:23:27 - INFO] - MusicBot: 📦 [Backup] 'shutdown' snapshot: database_backup_shutdown_20260927_132327715.json.gz (306 B)
-[27-Sep-26 13:23:27 - INFO] - MusicBot: 📦 [Backup] Shutdown snapshot saved: database_backup_shutdown_20260927_132327715.json.gz
-[27-Sep-26 13:23:27 - INFO] - MusicBot: Bot stopped.
-[27-Sep-26 13:23:27 - INFO] - MusicBot: Assistants stopped.
-[27-Sep-26 13:23:27 - INFO] - MusicBot: Stopped.
+[27-Sep-26 13:49:17 - INFO] - MusicBot: Embedded assets ready: 13 locales, 2 fonts.
+[27-Sep-26 13:49:17 - INFO] - MusicBot: Loaded languages: ar, de, en, es, fr, hi, ja, my, pa, pt, ru, tr, zh
+[27-Sep-26 13:49:17 - WARNING] - MusicBot: ⚠️ SESSION (assistant) set nahi hai — bot BOT-ONLY MODE me chalega. Commands, admin panel, logs, database aur backups sab kaam karenge, lekin /play (voice chat) ke liye assistant string session zaroori hai.
+[27-Sep-26 13:49:17 - INFO] - MusicBot: 💾 [Database] LOCAL VPS STORAGE MODE active — data: /home/runner/work/Music-x-bot/Music-x-bot/data/database.json | auto-backup: /home/runner/work/Music-x-bot/Music-x-bot/data/backups
+[27-Sep-26 13:49:17 - INFO] - MusicBot: Database cache loaded (0 chats, 0 users, 1 sudoers, mode=local).
+[27-Sep-26 13:49:24 - WARNING] - MusicBot: Bot LOGGER_ID (8276270776) access nahi kar paya: The chat_id "8276270776" belongs to a user
+[27-Sep-26 13:49:24 - INFO] - MusicBot: Bot started as @Droid_Gallery_Extractbot
+[27-Sep-26 13:49:24 - WARNING] - MusicBot: ⚠️ Koi assistant session start nahi hua — BOT-ONLY MODE active. Voice chat (/play) ke liye SESSION env var me assistant string session daalein.
+[27-Sep-26 13:49:24 - INFO] - MusicBot: PyTgCalls client(s) started: 0
+[27-Sep-26 13:49:24 - INFO] - MusicBot: 🩺 Health monitor + VC idle watcher start (heartbeat har 15 min).
+[27-Sep-26 13:49:24 - INFO] - MusicBot: ✅ External plugin 'example' loaded (3 handlers)
+[27-Sep-26 13:49:24 - INFO] - MusicBot: 🧩 External plugins: 1 loaded
+[27-Sep-26 13:49:24 - INFO] - MusicBot: Loaded 1 sudo users and 0 blacklisted users.
+[27-Sep-26 13:49:24 - INFO] - MusicBot: ⏰ [Backup] Auto-backup scheduler ON — har 6.00 ghante | retention 10 | delivery LOGGER_ID 8276270776
+[27-Sep-26 13:49:24 - INFO] - MusicBot: 📦 [Backup] 'startup' snapshot: database_backup_startup_20260927_134924873.json.gz (282 B)
+[27-Sep-26 13:49:26 - INFO] - MusicBot: Registered 67 command handlers.
+[27-Sep-26 13:49:26 - INFO] - MusicBot: Bot is live — database=💾 Local VPS Storage (Auto Backup ON), backups=/home/runner/work/Music-x-bot/Music-x-bot/data/backups
+[27-Sep-26 13:50:24 - INFO] - MusicBot: 💓 Heartbeat: uptime 1m 7s | chats 0 | vc 0 | db local | heals 0
+[27-Sep-26 13:56:38 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in MessageHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/utils.py", line 74, in get_input_media_from_file_id
+    decoded = FileId.decode(file_id)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/file_id.py", line 392, in decode
+    major = decoded[-1]
+            ~~~~~~~^^^^
+IndexError: index out of range
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3923, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 8231, in _ping
+    await sent.edit_media(
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/types/messages_and_media/message.py", line 8752, in edit_media
+    return await self._client.edit_message_media(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/methods/messages/edit_message_media.py", line 125, in edit_message_media
+    media=await media.write(client=self),
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/types/input_content/input_media_photo.py", line 129, in write
+    return utils.get_input_media_from_file_id(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/utils.py", line 76, in get_input_media_from_file_id
+    raise ValueError(
+ValueError: Failed to decode "". The value does not represent an existing local file, HTTP URL, or valid file id.
+[27-Sep-26 14:02:50 - ERROR] - pyrogram.dispatcher: Unexpected exception raised in CallbackQueryHandler:
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/pyrogram/dispatcher.py", line 477, in handler_worker
+    await handler.callback(self.client, *args)
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 3923, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Music-x-bot/Music-x-bot/main.py", line 8022, in _help_query
+    text=query.lang[f"help_{data[1]}"],
+         ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+KeyError: 'help_cookies_help'
+[27-Sep-26 14:05:25 - INFO] - MusicBot: 💓 Heartbeat: uptime 16m 7s | chats 0 | vc 0 | db local | heals 0
+[27-Sep-26 14:09:16 - INFO] - MusicBot: Stopping...
+[27-Sep-26 14:09:16 - INFO] - MusicBot: 📦 [Backup] 'shutdown' snapshot: database_backup_shutdown_20260927_140916720.json.gz (424 B)
+[27-Sep-26 14:09:16 - INFO] - MusicBot: 📦 [Backup] Shutdown snapshot saved: database_backup_shutdown_20260927_140916720.json.gz
+[27-Sep-26 14:09:16 - INFO] - MusicBot: Bot stopped.
+[27-Sep-26 14:09:16 - INFO] - MusicBot: Assistants stopped.
+[27-Sep-26 14:09:16 - INFO] - MusicBot: Stopped.
 
 
 =========== data/ ===========
 data:
 total 8.0K
-drwxr-xr-x 2 runner runner 4.0K Sep 27 13:23 backups
--rw-r--r-- 1 runner runner  633 Sep 27 13:23 database.json
+drwxr-xr-x 2 runner runner 4.0K Sep 27 14:09 backups
+-rw-r--r-- 1 runner runner 1.2K Sep 27 14:09 database.json
 
 data/backups:
-total 16K
--rw-r--r-- 1 runner runner 267 Sep 27 13:06 database_backup_manual_20260927_130609802.json.gz
--rw-r--r-- 1 runner runner 267 Sep 27 13:07 database_backup_manual_20260927_130717539.json.gz
--rw-r--r-- 1 runner runner 306 Sep 27 13:23 database_backup_shutdown_20260927_132327715.json.gz
--rw-r--r-- 1 runner runner 251 Sep 27 13:03 database_backup_startup_20260927_130337726.json.gz
+total 8.0K
+-rw-r--r-- 1 runner runner 424 Sep 27 14:09 database_backup_shutdown_20260927_140916720.json.gz
+-rw-r--r-- 1 runner runner 282 Sep 27 13:49 database_backup_startup_20260927_134924873.json.gz
