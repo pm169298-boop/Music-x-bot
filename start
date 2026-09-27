@@ -1,2 +1,5 @@
 #!/usr/bin/env bash
+# Music-x-bot starter (single file edition)
+set -e
+cd "$(dirname "$0")"
 exec python3 main.py

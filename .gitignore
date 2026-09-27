@@ -1,15 +1,38 @@
+# ---- Secrets & credentials (KABHI commit na karein) ----
 .env
-.cache
-.idea
-.DS_Store
-.venv/
-venv/
-cache/
-downloads/
-__pycache__/
-*.session
-*.session-journal
-!requirements.txt
-data/
+.env.*
+!.env.sample
+cookies.txt
+cookies/*.txt
 firebase_key.json
 firebase_credentials.json
+serviceAccountKey.json
+*.session
+*.session-journal
+
+# ---- Runtime data (firebase/local DB + automated backups) ----
+data/
+data/backups/
+logs/
+log.txt
+
+# ---- Cache / downloads ----
+.cache
+cache/
+downloads/
+activevc.txt
+errors.txt
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ---- Editor / OS ----
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

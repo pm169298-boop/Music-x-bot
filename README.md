@@ -1,161 +1,289 @@
-# 🎵 Music-x-bot (All-in-One Single File Telegram VC Music Bot)
+# 🎵 Music-x-bot — All-in-One Single File Telegram VC Music Bot
 
-Telegram Groups ke Voice Chat / Video Chat me high-quality music aur video stream karne ke liye ek **Single-File (`main.py`) Telegram Music Bot**, jisme **Firebase Realtime Database** aur **Local VPS Storage + Automated Backup Mode** dono inbuilt hain!
+Telegram Groups ke **Voice Chat / Video Chat** me high-quality music aur video stream karne
+ke liye ek **Single-File (`main.py`) bot**, jisme **Firebase Realtime Database** aur
+**Local VPS Storage + Automated Backup** dono built-in hain — aur saare **23 plugins,
+helpers, 13 locales aur fonts** usi ek file me embedded hain.
 
----
-
-## ✨ Features (Khaas Baatein)
-
-- ⚡ **Single-File Code (`main.py`):** 80+ files ki jhanjhat khatam! Pura bot ek single, clean aur fully documented `main.py` file me chalte hai.
-- 🗄️ **Hybrid Database System (Firebase + Local VPS):**
-  - **Firebase Mode:** Agar aap `FIREBASE_DATABASE_URL` aur credentials dete hain, to data Firebase Realtime Database me cloud par save hota hai.
-  - **Local VPS Backup Mode (Default):** Agar Firebase set nahi hai, to data automatically VPS par `data/database.json` me save hota hai.
-- 📦 **Automated Backup System:**
-  - VPS par har 6 ghante me auto-snapshot banta hai (`data/backups/`).
-  - Auto-backup seedha aapke Telegram Log Group (`LOGGER_ID`) me send ho jata hai.
-  - `/backup` command se Bot Owner kabhi bhi Telegram me latest database backup document mangwa sakta hai.
-- 🎧 **Audio & Video Streaming:** YouTube se audio (`/play`) aur 720p HD video (`/vplay`) dono stream karta hai.
-- 🎛️ **Inline Interactive Buttons:** Pause, Resume, Skip, Stop ke buttons gaana play hote waqt direct chat me aate hain.
-- 🍪 **YouTube Cookies Support:** Datacenter IP blocking se bachne ke liye `cookies.txt` support.
-
----
-
-## 🔑 Zaroori Credentials (Prerequisites / Kya Kya Chahiye)
-
-### 1. Telegram Credentials (Mandatory)
-| Variable | Description | Kahan se milega? |
-| :--- | :--- | :--- |
-| **`API_ID`** | Telegram App ID (Integer) | [my.telegram.org](https://my.telegram.org) par login karke **API Development Tools** se lein. |
-| **`API_HASH`** | Telegram App Hash (String) | [my.telegram.org](https://my.telegram.org) par API ID ke sath milega. |
-| **`BOT_TOKEN`** | Telegram Bot Token | Telegram par [@BotFather](https://t.me/BotFather) se `/newbot` bhej kar banayein. |
-| **`SESSION`** | Pyrogram v2 String Session | Telegram par [@StringFatherBot](https://t.me/StringFatherBot) par apne Assistant account ka session generate karein. |
-| **`OWNER_ID`** | Aapka Telegram numeric User ID | Telegram par [@userinfobot](https://t.me/userinfobot) ko `/start` karein. |
-| **`LOGGER_ID`** | Private Log Group ID | Ek private Telegram group banayein, Bot aur Assistant dono ko Admin banayein, fir group ID lein (e.g. `-100...`). Yahan auto-backups aayenge! |
-
-### 2. Database Options (Firebase ya Local VPS)
-- **Option 1 (Firebase):** Agar cloud database chahiye to Firebase Console me Realtime Database banayein aur `.env` me `FIREBASE_DATABASE_URL` aur Service Account key (`firebase_key.json` ya raw JSON string) set karein.
-- **Option 2 (Local VPS with Auto-Backup):** Kuchh set karne ki zaroorat nahi! Agar Firebase variables blank hain, to bot automatically VPS pe local storage mode me chalega aur backups banata rahega.
-
----
-
-## 🚀 Setup & Run Kaise Karein
-
-### Tarika 1: Automated VPS Setup (Recommended)
-
-Agar aapke paas Ubuntu/Debian VPS hai:
-
-1. **Repo clone karein:**
-   ```bash
-   git clone https://github.com/pm169298-boop/Music-x-bot.git
-   cd Music-x-bot
-   ```
-
-2. **Setup script chalayein:**
-   ```bash
-   bash setup
-   ```
-   *Ye script Python3, FFmpeg, pip packages install karega aur aapse values puch kar `.env` file automatic bana dega.*
-
-3. **Bot start karein:**
-   ```bash
-   bash start
-   ```
-   ya direct:
-   ```bash
-   python3 main.py
-   ```
-
-4. **24/7 background me chalane ke liye:**
-   ```bash
-   screen -S musicbot
-   python3 main.py
-   ```
-   *(Screen detach karne ke liye keyboard par `Ctrl + A` fir `D` dabayein).*
-
----
-
-### Tarika 2: Manual PC / Server Setup
-
-1. **Prerequisites:** Python 3.10+ aur FFmpeg install karein.
-2. **Dependencies install karein:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. **Configuration file (.env) banayein:**
-   `sample.env` ko copy karke `.env` banayein:
-   ```bash
-   cp sample.env .env
-   ```
-   Aur apni details daalein:
-   ```env
-   API_ID=12345678
-   API_HASH=abcdef1234567890abcdef1234567890
-   BOT_TOKEN=123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ
-   SESSION=BQGabcdef...
-   OWNER_ID=123456789
-   LOGGER_ID=-1001234567890
-
-   # Firebase (Optional - Chhod sakte hain agar local VPS save chahiye)
-   FIREBASE_DATABASE_URL=
-   FIREBASE_CREDENTIALS=firebase_key.json
-   ```
-4. **Run karein:**
-   ```bash
-   python3 main.py
-   ```
-
----
-
-### Tarika 3: Docker Deployment
-
-```bash
-docker build -t musicbot .
-docker run -d --name musicbot --env-file .env musicbot
+```
+╔══════════════════════════════════════════════════════════════╗
+║   🎵  Music-x-bot  v3.1.0  —  Single File Edition            ║
+║   Pyrogram + PyTgCalls  |  Firebase / Local VPS + Auto Backup ║
+╚══════════════════════════════════════════════════════════════╝
 ```
 
 ---
 
-## 🎮 Telegram Group Me Kaise Use Karein
+## ⚡ Sab Kuch Ek Hi File Me
 
-1. Group me **Voice Chat (Video Chat)** start karein.
-2. Apne **Bot** aur **Assistant Account** dono ko group me add karein aur Bot ko **Admin** banayein.
-3. Group me command bhejein:
-   ```text
-   /play Kesariya
-   ```
-   ya video ke liye:
-   ```text
-   /vplay https://www.youtube.com/watch?v=BddP6PYo2gs
-   ```
-4. Assistant account Voice Chat join karega aur gaana bajne lagega!
+| Cheez | Original structure | Ab is repo me |
+| :--- | :--- | :--- |
+| Core engine | `anony/core/*.py` (8 files) | ✅ `main.py` (inlined) |
+| Plugins | `anony/plugins/*.py` (**22 plugins**) | ✅ `main.py` (inlined) + `plugins/` auto-load |
+| Helpers | `anony/helpers/*.py` (8 files) | ✅ `main.py` (inlined) |
+| Locales | `anony/locales/*.json` (**13 languages**) | ✅ `main.py` me embedded (lzma+base64) |
+| Fonts | 2 `.ttf` files | ✅ `main.py` me embedded + runtime par extract |
+| Database | MongoDB (pymongo) | ✅ **Firebase Realtime DB ⟷ Local VPS (hybrid)** |
+| Backup | ❌ nahi tha | ✅ **Automated backup + Telegram delivery + restore** |
+
+> Kuch bhi kam nahi kiya gaya — saare commands, sab features intact hain (neeche poori list).
 
 ---
 
-## 🕹️ Commands List
+## ✨ Features
 
-| Command | Action |
+### 🎧 Playback
+- YouTube, YouTube Playlist, **Telegram files** (audio/video/document/voice) aur **M3U8** links support
+- `/play`, `/vplay`, `/playforce`, `/vplayforce` (force = turant bajao, queue skip)
+- Pause / Resume / Skip / Stop — inline buttons se bhi
+- **Seek** (`/seek`, `/seekback`) — gaane me aage-peeche jaayein
+- **Loop** (count based repeat `1–10`), **queue management**, now-playing timer bar
+- Multi-assistant load balancing (`SESSION`, `SESSION2`, `SESSION3`, `SESSION4`)
+
+### 🛠️ Admin
+- `/auth`, `/unauth`, `/authlist` — per-chat authorized users
+- `/admincache`, `/reload` — admin list refresh
+- `/playmode`, `/settings` — admin-only play mode, command auto-delete, language
+- `/blacklist`, `/unblacklist`, `/whitelist` — bot se group/user block (sudo)
+- `/broadcast` — `-copy`, `-nochat`, `-user` flags + error report file
+- `/addsudo`, `/delsudo`, `/listsudo` — sudo users (owner)
+- `/eval`, `/exec` — live Python evaluation (owner)
+- `/activevc`, `/stats`, `/ping`, `/alive`, `/id`, `/uptime`
+
+### 📝 Logs
+- **Rotating file logs** (`log.txt`, 10MB × 5 files) + console output
+- `/logs` — log file Telegram par (sudo)
+- `/logger on|off` — play/chat/user activity logging
+- **Telegram error logging** — `ERROR` level logs automatic LOGGER_ID group me
+- Play logs, new user/chat logs — sab LOGGER_ID me
+
+### 🗄️ Database (Hybrid Engine)
+- **Firebase mode:** `FIREBASE_DATABASE_URL` + service account set ho to data Firebase
+  Realtime Database me sync hota hai (debounced background sync)
+- **Local VPS mode (default):** Firebase na ho to data `data/database.json` me atomically save
+- **Zero data loss:** Firebase down ho jaaye to automatic **degraded mode** → local mirror par
+  likhta rahega, aur connection wapas aate hi sab cloud par sync
+- `/dbstatus` (status), `/syncdb push|pull|reconnect` (manual sync)
+
+### 📦 Automated Backup
+- Har **`BACKUP_INTERVAL_HOURS`** (default 6) ghante me timestamped snapshot `data/backups/`
+- **Har backup LOGGER_ID (log group) me document ban kar chala jaata hai**
+- `/backup` — turant backup + Telegram par
+- `/backups` — saare snapshots list + system status
+- `/restore` — backup file par reply karke database restore (owner)
+- Retention (`MAX_BACKUPS_RETAINED`), **gzip compression**, pre-restore safety snapshot
+- Optional: `BACKUP_REMOTE_DIR` (mounted disk / rclone) par extra copy
+- Optional: `FIREBASE_STORAGE_BUCKET` par cloud upload
+- Startup + shutdown par bhi automatic backup
+
+### 🌍 Baaki
+- **13 languages** — ar, de, en, es, fr, hi, ja, my, pa, pt, ru, tr, zh (`/lang`)
+- Custom thumbnail generation (fonts embedded)
+- Inline YouTube search — kisi bhi chat me `@YourBot <query>`
+- **Plugin system** — `plugins/` folder me `.py` daalo → auto-load + hot reload
+- Maintenance mode (`/maintenance on|off`)
+
+---
+
+## 🚀 Setup & Run
+
+### Tarika 1: Automated VPS Setup (Recommended)
+
+```bash
+git clone https://github.com/pm169298-boop/Music-x-bot.git
+cd Music-x-bot
+bash setup      # system deps + .env banata hai (values poochta hai)
+bash start      # bot chalu
+```
+
+24/7 background:
+```bash
+screen -S musicbot
+bash start        # detach: Ctrl+A phir D
+```
+
+### Tarika 2: Manual
+
+```bash
+pip install -r requirements.txt
+cp sample.env .env      # values bharein
+python3 main.py
+```
+
+### Tarika 3: Docker
+
+```bash
+docker build -t musicxbot .
+docker run -d --name musicxbot -v $PWD/data:/app/data --env-file .env musicxbot
+```
+
+---
+
+## 🔑 Environment Variables ( Zaroori )
+
+### Telegram (Mandatory)
+| Variable | Description |
 | :--- | :--- |
-| `/play <song/link>` | Voice chat me audio play karega |
-| `/vplay <song/link>` | Voice chat me video play karega |
-| `/pause` | Current gaana pause karega |
-| `/resume` | Paused gaana resume karega |
-| `/skip` | Agla gaana play karega |
-| `/stop` ya `/end` | Gaana band karke Assistant ko VC se bahar nikal dega |
-| `/queue` | Upcoming gaano ki list dikhayega |
-| `/ping` | Bot ka latency aur response time check karega |
-| `/stats` | System CPU, RAM, Total songs played aur active database mode dikhayega |
-| `/backup` | **(Owner only)** Latest database backup file Telegram chat me bhej dega |
+| `API_ID` / `API_HASH` | [my.telegram.org](https://my.telegram.org) → API Development Tools |
+| `BOT_TOKEN` | [@BotFather](https://t.me/BotFather) se |
+| `SESSION` | Assistant account ka Pyrogram v2 string session ([@StringFatherBot](https://t.me/StringFatherBot)) |
+| `OWNER_ID` | Aapki numeric user id ([@userinfobot](https://t.me/userinfobot)) |
+| `LOGGER_ID` | Private group id — **logs + automatic backups yahan aayenge** (bot & assistant admin) |
+| `SUDO_USERS` | *(Optional)* env se extra sudo users, comma separated — ye hamesha sudo rehte hain (DB se delete bhi nahi hote) |
+| `SESSION2` `SESSION3` `SESSION4` | *(Optional)* extra assistants |
+
+### Database — Option A: Firebase (optional)
+| Variable | Description |
+| :--- | :--- |
+| `FIREBASE_DATABASE_URL` | Firebase Realtime Database URL |
+| `FIREBASE_CREDENTIALS` | Service account key file (e.g. `firebase_key.json`) |
+| `FIREBASE_CREDENTIALS_JSON` | *(Alternative)* pura JSON ek string me |
+| `FIREBASE_STORAGE_BUCKET` | *(Optional)* backups cloud par bhi |
+| `FIREBASE_ROOT` | Realtime DB me root node (default `musicbot`) |
+
+**Firebase kaise setup karein:**
+1. [Firebase Console](https://console.firebase.google.com) → naya project → **Realtime Database** create karein
+2. **Project Settings → Service accounts → Generate new private key** → `firebase_key.json` download
+3. File ko project folder me rakhein (`.gitignore` me hai — safe) aur `.env` me URL + filename daalein
+4. Bot start karein — local data automatic cloud par migrate ho jaayega 🔥
+
+### Database — Option B: Local VPS + Auto Backup (default)
+Kuch set karne ki zaroorat nahi. Firebase blank ho to bot automatic:
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `DATA_DIR` | `data` | Local storage folder |
+| `BACKUP_DIR` | `data/backups` | Snapshots folder |
+| `BACKUP_INTERVAL_HOURS` | `6` | Kitne ghante me auto-backup |
+| `MAX_BACKUPS_RETAINED` | `10` | Kitne snapshots rakhein |
+| `BACKUP_TO_LOGGER` | `True` | Backup LOGGER_ID par bhejein |
+| `BACKUP_GZIP` | `True` | Compressed backups |
+| `BACKUP_REMOTE_DIR` | *(khaali)* | Extra copy location (mounted disk/rclone) |
+
+### Cookies (VPS/datacenter ke liye recommended)
+| Variable | Description |
+| :--- | :--- |
+| `COOKIES_FILE` | `cookies.txt` (Netscape format) — **`.gitignore` me hai, GitHub par nahi jaayega** |
+| `COOKIES_B64` | cookies.txt ka base64 (Heroku/Railway ke ephemeral FS ke liye) |
+| `COOKIES_CONTENT` | raw netscape content |
+| `COOKIES_URL` | [batbin.me](https://batbin.me) raw URL(s) |
+
+Baaki saari options `sample.env` me comment ke saath di hui hain.
 
 ---
 
-## 📦 Backup Mode Kaise Kaam Karta Hai?
+## 🕹️ Commands (61 total)
 
-1. **Auto-Save:** Har command, naya chat aur song count local file `data/database.json` me turant atomically save hota hai taaki crash hone par bhi file corrupt na ho.
-2. **Scheduled Backups:** Har 6 ghante me ek naya timestamped snapshot `data/backups/database_backup_YYYYMMDD_HHMMSS.json` ban jata hai aur agar `LOGGER_ID` set hai, to seedha Telegram logger group me document ban kar send ho jata hai.
-3. **Manual Backup (`/backup`):** Bot owner kisi bhi waqt bot ko `/backup` bhej kar instant backup file mangwa sakta hai.
+### 🎵 Playback
+| Command | Description |
+| :--- | :--- |
+| `/play <naam/url>` (reply bhi) | Audio play |
+| `/vplay <naam/url>` | Video play |
+| `/playforce` `/vplayforce` | Queue skip karke turant play |
+| `/pause` `/resume` | Pause / Resume |
+| `/skip` `/next` | Next track |
+| `/stop` `/end` | Stop + VC se leave |
+| `/seek <sec>` `/seekback <sec>` | Aage / peeche |
+| `/loop <1-10\|off>` | Repeat count |
+| `/queue` `/playing` | Queue dikhayein |
+
+### 🛡️ Admin
+`/auth` `/unauth` `/authlist` `/admincache` `/reload` `/playmode` `/settings`
+`/blacklist` `/unblacklist` `/whitelist` `/broadcast` `/addsudo` `/delsudo` `/listsudo` `/sudolist` `/eval` `/exec`
+
+### 📝 Logs & Info
+`/logs` `/logger on|off` `/restart` `/stats` `/ping` `/alive` `/ac` `/activevc` `/id` `/chatid` `/uptime` `/sysinfo` `/lang` `/language`
+
+### 🗄️ Database & Backup
+| Command | Access | Description |
+| :--- | :--- | :--- |
+| `/backup` | sudo | Turant snapshot + Telegram par |
+| `/backups` | sudo | Saare backups + system status |
+| `/restore` | owner | Backup file par reply → database restore |
+| `/dbstatus` | sudo | Storage engine status (Firebase/local) |
+| `/syncdb push\|pull\|reconnect` | owner | Manual Firebase sync |
+
+### 🧩 Plugins & Misc
+`/plugins` `/plugin list|scan|reload|enable|disable <name>` `/maintenance on|off` `/start` `/help`
 
 ---
 
-## 📄 License
+## 🧩 Plugin System
 
-This project is licensed under the [MIT License](LICENSE).
+`plugins/` folder me koi bhi `.py` file daal do — bot start hote hi **auto-load** ho jaayegi.
+Koi import likhne ki zaroorat nahi (`app`, `db`, `config`, `logger`, `queue`, `yt`, `filters`,
+`types` sab automatically available hote hain):
+
+```python
+# plugins/my_feature.py
+@command(["hello", "hi"], description="Namaste bolta hai")
+async def hello(_, message):
+    await message.reply_text("Namaste! 👋")
+
+@on_message(filters.regex("^pingme$"))
+async def pingme(_, message):
+    await message.reply_text("pong 🏓")
+```
+
+Runtime me manage karein:
+```text
+/plugins                     → saare plugins + status
+/plugin scan                 → naye files dhoondo aur load karo
+/plugin reload my_feature    → hot reload (bot restart ki zaroorat nahi)
+/plugin disable my_feature   → band karein
+```
+
+---
+
+## 📦 Backup Kaise Kaam Karta Hai (Step by Step)
+
+1. **Save:** har change (lang, auth, sudo, blacklist, loop, chat) turant local mirror me
+   atomically likha jaata hai + Firebase configured ho to cloud par sync hota hai.
+2. **Auto snapshot:** har `BACKUP_INTERVAL_HOURS` ghante me
+   `data/backups/database_backup_auto_YYYYMMDD_HHMMSS.json.gz` banta hai.
+3. **Telegram delivery:** snapshot seedha aapke `LOGGER_ID` group me document ban kar bhejta hai.
+4. **Retention:** sirf last `MAX_BACKUPS_RETAINED` snapshots rakhte hain (purane auto-delete).
+5. **Restore:** `/restore` ke saath backup file par reply karein — pre-restore safety snapshot
+   bhi automatically ban jaata hai.
+
+---
+
+## 🐛 Troubleshooting
+
+| Problem | Solution |
+| :--- | :--- |
+| `Missing required environment variables` | `sample.env` → `.env` copy karke saari values bharein |
+| Assistant VC join nahi karta | Assistant account group me add + admin banayein, VC start ho |
+| `No active Voice Chat found` | Group me Voice Chat start karein, phir `/play` |
+| YouTube download fail / bot check | `cookies.txt` update karein ya `COOKIES_B64` set karein |
+| Firebase connect nahi ho raha | Bot Local VPS mode me chala jaayega (data safe). `/dbstatus` se error dekhein |
+| Backup LOGGER_ID par nahi aa raha | Bot ko log group me **admin** banayein + `BACKUP_TO_LOGGER=True` |
+| `/logs` fail | Bot ko LOGGER_ID me admin banayein, ya `LOG_FILE` path check karein |
+| Commands missing | `/plugin scan` chalayein aur `/logs` dekhein |
+
+---
+
+## 📁 Repo Structure
+
+```text
+Music-x-bot/
+├── main.py              # ⭐ sab kuch: engine + 27 plugins + helpers + locales + fonts
+├── requirements.txt     # clean dependency list
+├── sample.env           # saari env variables (copy → .env)
+├── setup                # automated VPS setup script
+├── start                # bot starter
+├── Dockerfile           # docker deployment
+├── Procfile             # Heroku-style worker
+├── plugins/             # auto-load folder (README + example plugin)
+├── locales/             # (optional) custom translations yahan rakhein
+├── data/                # runtime: database.json + backups/  (gitignored)
+└── cookies.txt          # (aap rakhein) — .gitignore me hai, push nahi hoga
+```
+
+---
+
+## 🙏 Credits & License
+
+- Single-file edition: **pm169298-boop**
+- Base architecture: **AnonXMusic / LunaXMusicBot** — © 2025 [AnonymousX1025](https://github.com/AnonymousX1025) (MIT)
+- License: **MIT** (dekhein [LICENSE](LICENSE))

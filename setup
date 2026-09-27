@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
+# ==============================================================================
+#  Music-x-bot — Automated VPS setup (Ubuntu / Debian)
+#  Ye script system deps install karti hai aur .env banati hai.
+# ==============================================================================
 set -e
+cd "$(dirname "$0")"
 
 echo "=========================================================="
-echo "      Music-x-bot Automated Single-File Setup"
+echo "        🎵 Music-x-bot — Automated VPS Setup"
 echo "=========================================================="
 
-# Check sudo
+# ---- sudo detect -------------------------------------------------------------
 SUDO=""
 if [ "$EUID" -ne 0 ]; then
     if command -v sudo &>/dev/null; then
@@ -13,53 +18,81 @@ if [ "$EUID" -ne 0 ]; then
     fi
 fi
 
-echo "[1/4] Installing system dependencies (Python3, FFmpeg, Git)..."
+echo "[1/5] System dependencies install kar rahe hain (Python3, FFmpeg, Git)..."
 if command -v apt-get &>/dev/null; then
     $SUDO apt-get update -y
     $SUDO apt-get install -y python3 python3-pip python3-venv ffmpeg curl git
 fi
 
-echo "[2/4] Installing Python requirements from requirements.txt..."
+echo "[2/5] Python packages install ho rahe hain (requirements.txt)..."
 python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
 
-echo "[3/4] Enter your Bot Configuration values below:"
+echo "[3/5] Telegram + Firebase configuration:"
 echo "----------------------------------------------------------"
 read -rp "Telegram API_ID: " api_id
 read -rp "Telegram API_HASH: " api_hash
-read -rp "Bot Token (from @BotFather): " bot_token
-read -rp "Assistant Session (from @StringFatherBot): " session_str
-read -rp "Owner ID (from @userinfobot): " owner_id
+read -rp "Bot Token (@BotFather): " bot_token
+read -rp "Assistant Session (@StringFatherBot): " session_str
+read -rp "Owner ID (@userinfobot): " owner_id
 read -rp "Logger Group ID (e.g. -100...): " logger_id
+read -rp "Extra assistant session 2 (Enter = skip): " session2
 echo "----------------------------------------------------------"
-echo "Firebase Setup (Press ENTER to skip and use Local VPS mode):"
-read -rp "Firebase Realtime DB URL (leave blank for Local VPS): " fb_url
-fb_creds=""
+echo "Firebase Realtime Database (Enter dabayein = Local VPS mode + auto backup):"
+read -rp "FIREBASE_DATABASE_URL: " fb_url
+fb_creds="firebase_key.json"
 if [ -n "$fb_url" ]; then
-    read -rp "Firebase Credentials File (e.g. firebase_key.json): " fb_creds
+    read -rp "Firebase credentials file name (default firebase_key.json): " fb_creds_input
+    fb_creds="${fb_creds_input:-firebase_key.json}"
 fi
+echo "----------------------------------------------------------"
+echo "Automated backup settings:"
+read -rp "Backup interval in hours (default 6): " backup_hours
+backup_hours="${backup_hours:-6}"
+read -rp "Kitne backups retain karne hain (default 10): " backups_keep
+backups_keep="${backups_keep:-10}"
 
-echo "[4/4] Writing configuration to .env file..."
+echo "[4/5] .env file likh rahe hain..."
 cat > .env <<EOF
 API_ID=$api_id
 API_HASH=$api_hash
 BOT_TOKEN=$bot_token
-SESSION=$session_str
 OWNER_ID=$owner_id
 LOGGER_ID=$logger_id
+SESSION=$session_str
+SESSION2=$session2
+
 FIREBASE_DATABASE_URL=$fb_url
 FIREBASE_CREDENTIALS=$fb_creds
-BACKUP_INTERVAL_HOURS=6
-MAX_BACKUPS_RETAINED=10
+FIREBASE_ROOT=musicbot
+FIREBASE_SYNC_INTERVAL=60
+
+DATA_DIR=data
+BACKUP_DIR=data/backups
+BACKUP_INTERVAL_HOURS=$backup_hours
+MAX_BACKUPS_RETAINED=$backups_keep
+BACKUP_GZIP=True
+BACKUP_ON_START=True
+BACKUP_ON_SHUTDOWN=True
+BACKUP_TO_LOGGER=True
+
 COOKIES_FILE=cookies.txt
+COOKIES_DIR=cookies
+LOG_TO_TELEGRAM=True
+PLAY_LOG=True
+LANG_CODE=en
 EOF
 
+mkdir -p data data/backups downloads cache plugins locales cookies
 chmod +x start setup
 
+echo "[5/5] Setup complete! ✅"
 echo ""
 echo "=========================================================="
-echo " Setup Complete! You can now start your bot using:"
-echo "   python3 main.py"
-echo "   OR"
-echo "   bash start"
+echo "  Database mode : $([ -n "$fb_url" ] && echo 'Firebase Realtime DB' || echo 'Local VPS Storage + Auto Backup')"
+echo "  Backup        : har $backup_hours ghante, last $backups_keep snapshots retain"
+echo "  Backups kaise : LOGGER_ID group me automatic + /backup command"
+echo ""
+echo "  Bot start karein:  bash start      (ya: python3 main.py)"
+echo "  24/7 ke liye     :  screen -S musicbot ; bash start  (Ctrl+A phir D)"
 echo "=========================================================="
