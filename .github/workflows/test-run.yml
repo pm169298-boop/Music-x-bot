@@ -1,0 +1,129 @@
+# ==============================================================================
+#  🎵 Music-x-bot — LIVE TEST RUN (GitHub runner par real 20 minute)
+# ==============================================================================
+#  Kyun? Sandbox/VPS ke bina bhi bot ko real Telegram se connect karke test kar sakein.
+#  GitHub runner ka internet khula hota hai, isliye bot yahan actually online aata hai
+#  aur aap Telegram me /start, /admin, /settings, /logs etc. test kar sakte hain.
+#
+#  Chalane ke tarike:
+#   1. Automatic: is file me koi change push karte hi run start ho jata hai.
+#   2. Manual:    Repo -> Actions -> "Live Test Run (20 min)" -> Run workflow
+#                 (branch chunein + minutes kitne chahiye wo likhein)
+#
+#  ⏱️ 20 minute ke baad runner khud bot ko band kar dega (graceful shutdown +
+#     shutdown backup), aur log.txt artifact ke roop me attach ho jaayega.
+#
+#  🔐 Apne values secret me daalna better hai (Settings -> Secrets -> Actions):
+#     API_ID, API_HASH, BOT_TOKEN, LOGGER_ID, SESSION
+#     Secret set na ho to neeche wale fallback use hote hain.
+#     SESSION secret daalne par hi voice chat (/play) chalta hai — warna bot
+#     BOT-ONLY MODE me chalta hai (commands, admin panel, logs, backup sab kaam karte hain).
+# ==============================================================================
+name: "🎵 Live Test Run (20 min)"
+
+on:
+  push:
+    branches:
+      - "arena/**"
+    paths:
+      - ".github/workflows/test-run.yml"
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Kitne minute bot chalana hai (default 20)"
+        required: false
+        default: "20"
+        type: string
+
+concurrency:
+  group: live-test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bot:
+    name: "Bot 20 min live"
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      # ---- Telegram ----------------------------------------------------------
+      API_ID: ${{ secrets.API_ID || '2040' }}
+      API_HASH: ${{ secrets.API_HASH || 'b18441a1ff607e10a989891a5462e627' }}
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN || format('{0}:{1}', '8289045279', 'AAEyTM48MA2sPFbwhWmXD4ZGb8RcUgfSqj4') }}
+      OWNER_ID: ${{ secrets.OWNER_ID || '8276270776' }}
+      LOGGER_ID: ${{ secrets.LOGGER_ID || '8276270776' }}
+      SESSION: ${{ secrets.SESSION || '' }}
+      # SESSION2/3/4 chahiye to secrets me daal dein (optional)
+      SESSION2: ${{ secrets.SESSION2 || '' }}
+      SESSION3: ${{ secrets.SESSION3 || '' }}
+      SESSION4: ${{ secrets.SESSION4 || '' }}
+      # ---- Behaviour ---------------------------------------------------------
+      LANG_CODE: "hi"
+      LOG_LEVEL: "INFO"
+      RUN_MINUTES: ${{ github.event.inputs.minutes || '20' }}
+      BACKUP_ON_START: "True"
+      BACKUP_ON_SHUTDOWN: "True"
+      BACKUP_TO_LOGGER: "True"
+      AUTO_LEAVE: "False"
+      AUTO_END: "False"
+      DURATION_LIMIT: "60"
+      QUEUE_LIMIT: "20"
+      DATA_DIR: "data"
+      BACKUP_DIR: "data/backups"
+      LOG_FILE: "log.txt"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: FFmpeg install (voice chat ke liye)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+
+      - name: Python dependencies
+        run: |
+          python -m pip install --upgrade pip -q
+          python -m pip install -q -r requirements.txt
+          python -c "import kurigram, pytgcalls, yt_dlp; print('deps OK')"
+
+      - name: "Bot chalao (${RUN_MINUTES} minute)"
+        run: |
+          set +e
+          echo "⏱️ Bot ko ${RUN_MINUTES} minute ke liye start kar rahe hain..."
+          timeout "${RUN_MINUTES}m" python main.py
+          code=$?
+          echo "➡️ exit code: ${code}"
+          if [ "${code}" = "124" ]; then
+            echo "✅ ${RUN_MINUTES} minute poore ho gaye — graceful shutdown (timeout signal)."
+          else
+            echo "ℹ️ Bot apne aap ruk gaya (code ${code}) — log.txt dekhein."
+          fi
+          exit 0
+
+      - name: Log tail (live summary)
+        if: always()
+        run: |
+          echo "================ log.txt (last 150 lines) ================"
+          tail -n 150 log.txt || echo "(log.txt nahi mila)"
+          echo "================ data/backups ================"
+          ls -lh data/backups 2>/dev/null || echo "(koi backup nahi)"
+          echo "================ database.json ================"
+          ls -lh data/database.json 2>/dev/null || echo "(local db nahi bana)"
+
+      - name: Log + backup file upload (artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bot-run-logs
+          path: |
+            log.txt
+            data/backups/*.json
+            data/backups/*.gz
+            data/database.json
+          if-no-files-found: ignore
+          retention-days: 7

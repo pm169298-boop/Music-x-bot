@@ -331,6 +331,8 @@ class Config:
 
         # Assistants (multi-client support)
         self.SESSION1: Optional[str] = self._env("SESSION") or None
+        # True = assistant sessions available (voice chat playback possible)
+        self.ASSISTANT_MODE: bool = bool(self.SESSION1)
         self.SESSION2: Optional[str] = self._env("SESSION2") or None
         self.SESSION3: Optional[str] = self._env("SESSION3") or None
         self.SESSION4: Optional[str] = self._env("SESSION4") or None
@@ -411,16 +413,36 @@ class Config:
 
     # ---- validation ----------------------------------------------------------
     def check(self) -> None:
-        missing = [
-            var
-            for var in ["API_ID", "API_HASH", "BOT_TOKEN", "LOGGER_ID", "OWNER_ID", "SESSION1"]
-            if not getattr(self, var)
-        ]
+        """
+        Zaroori env vars check. Sirf 3 cheezein mandatory hain: API_ID, API_HASH, BOT_TOKEN.
+        LOGGER_ID missing ho to OWNER_ID par fallback ho jaata hai, aur SESSION missing ho to
+        bot "bot-only mode" me chalta hai (commands, admin panel, logs, backups sab kaam karte
+        hain — sirf voice chat playback off rehta hai jab tak assistant session na daalein).
+        """
+        missing = [var for var in ["API_ID", "API_HASH", "BOT_TOKEN"] if not getattr(self, var)]
         if missing:
             raise SystemExit(
                 "❌ Missing required environment variables: "
                 + ", ".join(missing)
                 + "\n   sample.env ko .env me copy karke values bharein (ya env vars set karein)."
+            )
+
+        if not self.OWNER_ID:
+            logger.warning("⚠️ OWNER_ID set nahi hai — owner-only commands kisi ke liye kaam nahi karenge.")
+
+        if not self.LOGGER_ID:
+            self.LOGGER_ID = self.OWNER_ID or 0
+            logger.warning(
+                "⚠️ LOGGER_ID set nahi hai — logs/backups owner (%s) ke DM me jaayenge "
+                "(group id daalna better hai).",
+                self.LOGGER_ID or "?",
+            )
+
+        if not self.SESSION1:
+            logger.warning(
+                "⚠️ SESSION (assistant) set nahi hai — bot BOT-ONLY MODE me chalega. "
+                "Commands, admin panel, logs, database aur backups sab kaam karenge, "
+                "lekin /play (voice chat) ke liye assistant string session zaroori hai."
             )
 
     def ensure_dirs(self) -> None:
@@ -4558,6 +4580,19 @@ def checkUB(play):
         if not m.from_user:
             return await m.reply_text(m.lang["play_user_invalid"])
 
+        # Bot-only mode (SESSION nahi diya) -> playback available nahi hai
+        if not config.ASSISTANT_MODE:
+            return await m.reply_text(
+                m.lang.get("no_assistant")
+                or (
+                    "🎙️ <b>Voice chat playback off hai</b> — koi assistant session set nahi hai.\n\n"
+                    "Bot-only mode active hai (commands, admin panel, logs, database aur backups "
+                    "sab kaam kar rahe hain).\n"
+                    "Playback enable karne ke liye <code>SESSION</code> env var me assistant ka "
+                    "string session daalein (@StringFatherBot) aur bot restart karein."
+                )
+            )
+
         chat_id = m.chat.id
         if m.chat.type != enums.ChatType.SUPERGROUP:
             await m.reply_text(m.lang["play_chat_invalid"])
@@ -5237,6 +5272,8 @@ class HybridDatabase:
         return num
 
     async def get_assistant(self, chat_id: int):
+        if not anon.clients:  # bot-only mode (koi assistant session nahi)
+            return None
         if chat_id not in self.assistant:
             num = self.assistant.get(chat_id)
             if not num or num > len(anon.clients):
@@ -5249,6 +5286,8 @@ class HybridDatabase:
         return anon.clients[index]
 
     async def get_client(self, chat_id: int):
+        if not userbot.clients:  # bot-only mode
+            return None
         if chat_id not in self.assistant:
             await self.get_assistant(chat_id)
         num = self.assistant.get(chat_id, 1)
@@ -6348,7 +6387,10 @@ class Userbot(Client):
                 raise SystemExit(f"Assistant {num} start nahi ho paya: {exc}") from exc
 
         if not self.clients:
-            raise SystemExit("Koi bhi assistant session start nahi hua (SESSION missing?).")
+            logger.warning(
+                "⚠️ Koi assistant session start nahi hua — BOT-ONLY MODE active. "
+                "Voice chat (/play) ke liye SESSION env var me assistant string session daalein."
+            )
 
     async def exit(self) -> None:
         for client in self.clients:
