@@ -121,6 +121,7 @@ import sys
 import time
 import traceback
 import uuid
+import zipfile
 from collections import defaultdict, deque
 from contextlib import suppress
 from dataclasses import dataclass
@@ -292,7 +293,7 @@ logging.getLogger().addHandler(telegram_log_handler)
 # ------------------------------------------------------------------------------
 # Global runtime state
 # ------------------------------------------------------------------------------
-__version__ = "3.1.0"
+__version__ = "3.3.0"
 BOT_DISPLAY_NAME = "Music-x-bot"
 tasks: list[asyncio.Task] = []
 boot = time.time()
@@ -311,16 +312,46 @@ class _ConfigMeta(type):
     """Config attribute ko dict ki tarah bhi access karne deta hai."""
 
 
+# ==============================================================================
+# OWNER CONFIG — APNI VALUES YAHAN DAALEIN (.env ki zaroorat nahi)
+#   API_ID/API_HASH: my.telegram.org -> "API development tools"
+#   BOT_TOKEN: @BotFather  |  OWNER_ID: bot ko /id bhejo
+#   SESSION (VC/play ke liye): khaali chhod sakte ho — bot me /login se add
+# ==============================================================================
+OWNER_CONFIG: dict = {
+    "API_ID": "",                 # "1234567"
+    "API_HASH": "",               # "abcdef1234567890abcdef1234567890"
+    "BOT_TOKEN": "",              # "12345:AA..."
+    "SESSION": "", "SESSION2": "", "SESSION3": "", "SESSION4": "",
+    "OWNER_ID": "",               # "8276270776"
+    "LOGGER_ID": "",              # "-100..." group ya apni DM id
+    "SUPER_ADMIN_IDS": "",
+    "FIREBASE_DATABASE_URL": "", "FIREBASE_CREDENTIALS": "",
+    "FIREBASE_CREDENTIALS_JSON": "", "FIREBASE_STORAGE_BUCKET": "", "FIREBASE_ROOT": "",
+    "BOT_NAME": "", "OWNER_NAME": "", "SUPPORT_CHANNEL": "", "SUPPORT_CHAT": "",
+    "UPDATE_REPO": "", "START_IMG": "", "PING_IMG": "", "DEFAULT_THUMB": "",
+    "FORCE_JOIN": "", "FONT_STYLE": "", "FONT_ENABLED": "", "DESIGN_ENABLED": "",
+    "LANG_CODE": "", "STREAM_DIRECT": "", "VC_IDLE_SECONDS": "",
+    "HEARTBEAT_MINUTES": "", "COOKIES_CONTENT": "",
+}
+
+
 class Config:
     """
     Saari settings ek jagah.
 
-    Sources (priority): real environment variables -> .env file -> defaults.
+    Sources (priority): OWNER_CONFIG (main.py upar) -> env/.env -> defaults.
     """
 
     # ---- helpers -------------------------------------------------------------
     @staticmethod
     def _env(key: str, default: str = "") -> str:
+        try:
+            own = OWNER_CONFIG.get(key)
+            if own is not None and str(own).strip():
+                return str(own).strip()
+        except Exception:
+            pass
         value = os.getenv(key)
         if value is None or not str(value).strip():
             return default
@@ -442,6 +473,9 @@ class Config:
         self.COOKIES_B64: str = self._env("COOKIES_B64")
         self.COOKIE_ENABLED: bool = self._bool("COOKIE_ENABLED", True)
         self.YTDLP_PLAYER_CLIENT: str = self._env("YTDLP_PLAYER_CLIENT")
+        # STREAM_DIRECT=True -> gaana download kiye bina direct stream (storage bachti hai);
+        # stream URL fail ho to apne aap download par fallback ho jaata hai.
+        self.STREAM_DIRECT: bool = self._bool("STREAM_DIRECT", True)
 
         # ---- directories -----------------------------------------------------
         self.DATA_DIR: str = self._path("DATA_DIR", "data")
@@ -4355,17 +4389,8 @@ class Inline:
                 self.ikb(text=lang["channel"], url=config.SUPPORT_CHANNEL),
             ],
         ]
-        if private:
-            rows += [
-                [
-                    self.ikb(
-                        text=lang["source"],
-                        url=config.UPDATE_REPO,
-                    )
-                ]
-            ]
-        else:
-            rows += [[self.ikb(text=lang["language"], callback_data="language")]]
+        # GitHub/source button sabke liye nahi dikhate (code sirf sudo: /source)
+        rows += [[self.ikb(text=lang["language"], callback_data="language")]]
         return self.ikm(rows)
 
     def yt_key(self, link: str) -> types.InlineKeyboardMarkup:
@@ -5976,9 +6001,43 @@ def run_ytdlp_download(opts: dict, url: str, video: bool = False) -> Optional[st
     return None
 
 
+def run_ytdlp_stream_extract(opts: dict, url: str) -> Optional[str]:
+    """
+    Blocking yt-dlp extract (asyncio.to_thread ke andar) — file download KIYE BINA
+    playable direct stream URL return karta hai. Fail ho to None (caller download
+    par fallback kar leta hai).
+    """
+    try:
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            if not info:
+                return None
+            if info.get("entries"):  # playlist safe
+                info = info["entries"][0]
+
+            # Pehle ready formats se best audio choose karo (re-extract ke bina)
+            formats = info.get("formats") or []
+            audio_formats = [
+                f for f in formats
+                if f.get("url") and (f.get("acodec") or "none") != "none" and f.get("vcodec") in (None, "none")
+            ]
+            pool = audio_formats or [f for f in formats if f.get("url")]
+            if pool:
+                best = max(pool, key=lambda f: (f.get("abr") or 0, f.get("tbr") or 0, f.get("filesize") or 0))
+                if best.get("url"):
+                    return str(best["url"])
+
+            # Fallback: yt-dlp ka final "url" field
+            direct = info.get("url")
+            return str(direct) if direct else None
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Stream extract fail (%s): %s", url, exc)
+        return None
+
+
 class YouTube:
     """
-    YouTube search / playlist / download engine.
+    YouTube search / playlist / download / direct-stream engine.
 
     Cookies sources (priority):
       1. config.COOKIES_DIR ke andar saari *.txt files
@@ -6243,13 +6302,50 @@ class YouTube:
             )
         return tracks
 
+    # ---- direct stream (download-less playback) ---------------------------
+    async def stream_link(self, video_id: str, video: bool = False) -> Optional[str]:
+        """Direct stream URL nikaalo — file download nahi hoti (storage safe)."""
+        url = video_id if str(video_id).startswith("http") else self.base + str(video_id)
+        cookie = self.get_cookies()
+        opts: dict[str, Any] = {
+            "quiet": True,
+            "noplaylist": True,
+            "geo_bypass": True,
+            "no_warnings": True,
+            "nocheckcertificate": True,
+            "skip_download": True,
+            "socket_timeout": 20,
+            "retries": 3,
+            "format": (
+                "bestvideo[height<=?720][ext=mp4]+bestaudio[ext=m4a]/best[height<=?720]/best"
+                if video
+                else "bestaudio[ext=webm][acodec=opus]/bestaudio[ext=m4a]/bestaudio/best"
+            ),
+        }
+        if cookie:
+            opts["cookiefile"] = cookie
+        if config.YTDLP_PLAYER_CLIENT:
+            opts["extractor_args"] = {"youtube": {"player_client": config.YTDLP_PLAYER_CLIENT.split(",")}}
+        return await asyncio.to_thread(run_ytdlp_stream_extract, opts, url)
+
     # ---- download ----------------------------------------------------------
     async def download(self, video_id: str, video: bool = False) -> Optional[str]:
-        """Audio (webm/opus) ya video (mp4) download karke local path return karta hai."""
+        """
+        Audio (webm/opus) ya video (mp4) ka playable source return karta hai.
+        STREAM_DIRECT on ho aur video na ho to pehle direct stream URL try hota hai
+        (storage 0); fail ho to normal download par fallback.
+        """
         url = video_id if str(video_id).startswith("http") else self.base + str(video_id)
         guess = self.path_for(str(video_id), video)
         if Path(guess).exists() and Path(guess).stat().st_size > 0:
             return guess
+
+        if not video and getattr(config, "STREAM_DIRECT", False):
+            link = await self.stream_link(video_id, video=False)
+            if link:
+                logger.info("🎧 Direct stream (download skip): %s", video_id)
+                return link
+            logger.warning("Direct stream fail — download par fallback: %s", video_id)
 
         cookie = self.get_cookies()
         opts: dict[str, Any] = {
@@ -6541,15 +6637,20 @@ class Bot(Client):
         if self.logger:
             try:
                 await self.send_message(self.logger, "Bot Started 🤖")
-                member = await self.get_chat_member(self.logger, self.id)
-                if member.status != enums.ChatMemberStatus.ADMINISTRATOR:
-                    warning = (
-                        "⚠️ Bot ko LOGGER_ID group me ADMIN promote karein "
-                        "(warna /logs aur backup delivery fail hongi)."
-                    )
-                    if config.STRICT_LOGGER:
-                        raise SystemExit(warning)
-                    logger.warning(warning)
+                # LOGGER_ID kisi user ki DM bhi ho sakti hai — group admin-check sirf
+                # negative chat id (group/channel) par karo, warna "belongs to a user" aata hai
+                if isinstance(self.logger, int) and self.logger > 0:
+                    logger.info("LOGGER_ID ek user DM hai — group admin-check skip kar rahe hain.")
+                else:
+                    member = await self.get_chat_member(self.logger, self.id)
+                    if member.status != enums.ChatMemberStatus.ADMINISTRATOR:
+                        warning = (
+                            "⚠️ Bot ko LOGGER_ID group me ADMIN promote karein "
+                            "(warna /logs aur backup delivery fail hongi)."
+                        )
+                        if config.STRICT_LOGGER:
+                            raise SystemExit(warning)
+                        logger.warning(warning)
             except SystemExit:
                 raise
             except Exception as exc:  # noqa: BLE001
@@ -7779,6 +7880,12 @@ rel_hist = {}
 @app.on_message(filters.command(["admincache", "reload"]) & filters.group & ~app.bl_users)
 @lang.language()
 async def _admincache(_, m: types.Message):
+    if not m.from_user:
+        return
+    if m.from_user.id not in app.sudoers:
+        admins = await db.get_admins(m.chat.id)
+        if m.from_user.id not in admins:
+            return await m.reply_text("⛔ Sirf group admins / sudo ye chala sakte hain.")
     if m.from_user.id in rel_hist:
         if time.time() < rel_hist[m.from_user.id]:
             return await m.reply_text(m.lang["admin_cache_wait"])
@@ -8018,8 +8125,10 @@ async def _help_query(_, query: types.CallbackQuery):
         except Exception:
             return
 
+    # KeyError se bachao: section ki translation nahi mili to help menu par wapas
+    help_text = query.lang.get(f"help_{data[1]}") or query.lang.get("help_menu", "") or "❌ Help section nahi mila."
     await query.edit_message_text(
-        text=query.lang[f"help_{data[1]}"],
+        text=help_text,
         reply_markup=buttons.help_markup(query.lang, True),
     )
 
@@ -8228,20 +8337,26 @@ async def _ping(_, m: types.Message):
     get_time = lambda s: (lambda r: (f"{r[-1]}, " if r[-1][:-4] != "0" else "") + ":".join(reversed(r[:-1])))([f"{v}{u}" for v, u in zip([s%60, (s//60)%60, (s//3600)%24, s//86400], ["s", "m", "h", "days"])])
     uptime = get_time(int(time.time() - boot))
     latency = round((time.time() - start) * 1000, 2)
-    await sent.edit_media(
-        media=types.InputMediaPhoto(
-            media=config.PING_IMG,
-            caption=m.lang["ping_pong"].format(
-                latency,
-                uptime,
-                psutil.cpu_percent(interval=0),
-                psutil.virtual_memory().percent,
-                psutil.disk_usage("/").percent,
-                await anon.ping(),
-            )
-        ),
-        reply_markup=buttons.ping_markup(m.lang["support"]),
+    caption = m.lang["ping_pong"].format(
+        latency,
+        uptime,
+        psutil.cpu_percent(interval=0),
+        psutil.virtual_memory().percent,
+        psutil.disk_usage("/").percent,
+        await anon.ping(),
     )
+    # Image set nahi hai to text se bhejo — khali URL par edit_media crash karta hai
+    ping_image = config.PING_IMG or branding_image("ping") or config.START_IMG or ""
+    if ping_image:
+        await sent.edit_media(
+            media=types.InputMediaPhoto(
+                media=ping_image,
+                caption=caption,
+            ),
+            reply_markup=buttons.ping_markup(m.lang["support"]),
+        )
+    else:
+        await sent.edit_text(caption, reply_markup=buttons.ping_markup(m.lang["support"]))
 
 
 # ==============================================================================
@@ -9467,6 +9582,7 @@ async def _setimg_cmd(_, m: types.Message):
         ref = {
             "type": "url",
             "value": url,
+            "media": "video" if url.lower().split("?")[0].endswith((".mp4", ".mkv", ".webm", ".mov", ".gif")) else "photo",
             "chat_id": m.chat.id,
             "message_id": m.id,
             "set_by": m.from_user.id,
@@ -9728,6 +9844,10 @@ def set_font(style: str, chat_id: Optional[int] = None) -> str:
     else:
         db.data.setdefault("settings", {})["font_style"] = style
         db.data["settings"]["font"] = style
+        db.data["settings"]["font_global"] = style
+        with suppress(Exception):
+            config.FONT_STYLE = style
+        apply_font_to_languages(style)
     db.mark_dirty()
     return style
 
@@ -9816,6 +9936,45 @@ def owner_footer(chat_id: Optional[int] = None) -> str:
     return f"{icon} {ftext('owner', chat_id=chat_id)} ▸ <b>{escape(str(name))}</b>"
 
 
+_HTML_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def fhtml(text, style=None):
+    """HTML text fancy font me — tags/code/links safe."""
+    raw = "" if text is None else str(text)
+    if not raw:
+        return raw
+    out, skip, pos = [], 0, 0
+    for m in _HTML_TAG_RE.finditer(raw):
+        chunk = raw[pos:m.start()]
+        out.append(chunk if skip else ftext(chunk, style))
+        tag = m.group(0).lower()
+        if any(f"<{t}" in tag for t in ("code", "pre")):
+            skip += 1
+        elif any(f"</{t}" in tag for t in ("code", "pre")):
+            skip = max(0, skip - 1)
+        out.append(m.group(0))
+        pos = m.end()
+    tail = raw[pos:]
+    out.append(tail if skip else ftext(tail, style))
+    return "".join(out)
+
+
+def apply_font_to_languages(style=None):
+    """Saare messages (start/help/play/queue...) ka font ek saath badlo."""
+    style = style or font_for()
+    if not getattr(lang, "raw_languages", None):
+        lang.raw_languages = {c: dict(t) for c, t in lang.languages.items()}
+    for code, table in lang.raw_languages.items():
+        if style in {"off", "none", "plain", "normal"}:
+            lang.languages[code] = dict(table)
+        else:
+            lang.languages[code] = {
+                k: (fhtml(v, style) if isinstance(v, str) else v) for k, v in table.items()
+            }
+    logger.info("🎨 Font '%s' saare messages par lagaya.", style)
+
+
 def brand_footer(chat_id: Optional[int] = None) -> str:
     return f"🎵 <b>{escape(str(getattr(config, 'BOT_NAME', BOT_DISPLAY_NAME)))}</b>"
 
@@ -9853,13 +10012,14 @@ async def _font_cmd(_, m: types.Message):
         )
         return await m.reply_text(text, link_preview_options=types.LinkPreviewOptions(is_disabled=True))
 
-    target_global = args[0] == "global"
-    if target_global:
-        if m.from_user.id not in app.sudoers:
-            return await m.reply_text("⛔ Global font sirf sudo/owner badal sakta hai.")
+    # sudo ke liye DEFAULT = GLOBAL (sab jagah); "local" likho to sirf is chat
+    target_global = args[0] == "global" or (args[0] != "local" and m.from_user.id in app.sudoers)
+    if args[0] in {"global", "local"}:
         args = args[1:]
         if not args:
             return await m.reply_text("⚠️ Style bhi bhejein: <code>/font global bold_sans</code>")
+    if target_global and m.from_user.id not in app.sudoers:
+        return await m.reply_text("⛔ Global font sirf sudo/owner badal sakta hai.")
 
     if args[0] == "preview":
         style = args[1] if len(args) > 1 else font_for(chat_id)
@@ -9937,11 +10097,15 @@ async def _font_cb(_, query: types.CallbackQuery):
         await db.flush(force=True)
         return await query.edit_message_text("🎨 Font band kar diya — ab simple text use hoga.")
 
-    style = set_font(value, chat_id)
+    is_sudo = query.from_user.id in app.sudoers
+    style = set_font(value, None if is_sudo else chat_id)
     if not style:
         return await query.answer("❌ Ye style nahi mila.", show_alert=True)
     await db.flush(force=True)
-    await query.answer(f"Font: {style}", show_alert=True)
+    await query.answer(
+        f"Font: {style} — {'SAB JAGAH lag gaya ✅' if is_sudo else 'is chat me lag gaya'}",
+        show_alert=True,
+    )
     sample = frame(
         "ꜰᴏɴᴛ ᴜᴘᴅᴀᴛᴇᴅ",
         [
@@ -10038,6 +10202,13 @@ async def force_join_gate(update: Any) -> Optional[types.InlineKeyboardMarkup]:
 @lang.language()
 async def _force_join_cb(_, query: types.CallbackQuery):
     channels = force_join_channels()
+    if not channels:
+        return await query.answer("Koi force-join channel set nahi hai.", show_alert=True)
+    if len(query.data.split()) > 1 and query.data.split()[1] == "preview":
+        await query.answer("Preview bhej diya ✅", show_alert=True)
+        return await query.message.reply_text(
+            force_join_text(channels), reply_markup=force_join_markup(channels)
+        )
     user_id = query.from_user.id
     for channel in channels:
         try:
@@ -10265,8 +10436,9 @@ async def _set_cookies_cmd(_, m: types.Message):
         if source and (source.document or source.audio):
             raw = await source.download(in_memory=True)
             text = raw.getvalue().decode("utf-8", errors="ignore") if hasattr(raw, "getvalue") else raw.decode("utf-8", errors="ignore")
-        elif source and source.text:
-            text = source.text
+        elif source and (source.text or source.caption):
+            # Netscape text message me ho ya media ke caption me — dono accept karo
+            text = source.text or source.caption or ""
         elif args:
             text = " ".join(args)
     except Exception as exc:  # noqa: BLE001
@@ -10489,7 +10661,11 @@ async def handle_login_input(_, m: types.Message) -> bool:
 
     if step == "otp":
         client: Client = state["client"]
+        # Users aksar code spaces/dash ke saath bhejte hain ("1 2 3 4 5") — sirf digits rakho
         code = re.sub(r"[^\d]", "", value)
+        if not code:
+            await m.reply_text("⚠️ OTP me digits nahi mile — Telegram wala code dobara bhejein (sirf numbers).")
+            return True
         try:
             await client.sign_in(state["phone"], state["phone_code_hash"], code)
         except errors.SessionPasswordNeeded:
@@ -10500,7 +10676,16 @@ async def handle_login_input(_, m: types.Message) -> bool:
             )
             return True
         except Exception as exc:  # noqa: BLE001
-            await m.reply_text(f"❌ OTP galat/expired: <code>{escape(str(exc))}</code>\nDobara code bhejein ya <code>/cancel</code>.")
+            name = type(exc).__name__
+            if name in {"PhoneCodeInvalid", "PHONE_CODE_INVALID"}:
+                await m.reply_text("❌ OTP galat hai — Telegram app ka <b>latest</b> code bhejein (spaces hata diye jayenge).")
+            elif name in {"PhoneCodeExpired", "PHONE_CODE_EXPIRED"}:
+                PENDING_LOGIN.pop(m.from_user.id, None)
+                with suppress(Exception):
+                    await client.disconnect()
+                await m.reply_text("⏰ OTP expire ho gaya — <code>/addsession</code> se dobara shuru karein.")
+            else:
+                await m.reply_text(f"❌ OTP galat/expired: <code>{escape(str(exc))}</code>\nDobara code bhejein ya <code>/cancel</code>.")
             return True
         await finish_session_login(_, m, state)
         return True
@@ -11015,6 +11200,91 @@ async def admin_panel_extra_sections(
 
 
 # ==============================================================================
+# SECTION: SOURCE CODE (/source — SIRF ADMIN/SUDO)
+# ==============================================================================
+SOURCE_EXCLUDE_DIRS = {"data", "cache", "downloads", ".git", "__pycache__", ".venv", "venv", "ci-artifacts"}
+SOURCE_HINT = "💡 Usage: /source (ZIP) | /source main | /source list | /source <file>"
+
+
+def source_root() -> Path:
+    return Path(__file__).resolve().parent
+
+
+def source_files() -> list:
+    root = source_root()
+    files = []
+    for path in sorted(root.rglob("*")):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(root)
+        if any(part in SOURCE_EXCLUDE_DIRS for part in rel.parts):
+            continue
+        if rel.suffix in {".pyc", ".session"} or rel.name in {"log.txt", ".env"}:
+            continue
+        files.append(path)
+    return files
+
+
+def source_zip(dest=None):
+    files = source_files()
+    if not files:
+        return None
+    dest = dest or (Path(config.CACHE_DIR) / "Music-x-bot-source.zip")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    root = source_root()
+    with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+        for path in files:
+            with suppress(Exception):
+                zf.write(path, arcname=str(Path("Music-x-bot") / path.relative_to(root)))
+    return dest
+
+
+@app.on_message(filters.command(["source", "getcode", "extract"]) & app.sudoers)
+@lang.language()
+async def _source_cmd(_, m: types.Message):
+    args = list(m.command[1:])
+    root = source_root()
+    sent = await m.reply_text("📦 Latest source nikaal rahe hain...")
+
+    if not args:
+        path = await asyncio.to_thread(source_zip)
+        if not path:
+            return await sent.edit_text("❌ Source files nahi mili.")
+        await sent.delete()
+        return await m.reply_document(
+            document=str(path),
+            caption=(
+                f"📦 Latest source — {len(source_files())} files, "
+                f"{fmt_bytes(path.stat().st_size)}\nSirf admin ke liye.\n{SOURCE_HINT}"
+            ),
+        )
+
+    target = args[0].lower()
+    if target in {"list", "ls", "files"}:
+        files = source_files()
+        body = "\n".join(f"• <code>{escape(str(p.relative_to(root)))}</code>" for p in files[:120])
+        await sent.delete()
+        for chunk in split_text(f"📂 Source files ({len(files)})\n\n{body}"):
+            await m.reply_text(chunk)
+        return
+
+    if target in {"main", "main.py"}:
+        main_file = root / "main.py"
+        await sent.delete()
+        return await m.reply_document(document=str(main_file), caption=f"📄 main.py — v{__version__}")
+
+    for name in args:
+        candidate = (root / name).resolve()
+        if root not in candidate.parents and candidate != root:
+            return await sent.edit_text("🚫 Sirf project folder ki files.")
+        if candidate.is_file():
+            await sent.delete()
+            return await m.reply_document(document=str(candidate), caption=f"📄 {escape(name)}")
+
+    await sent.edit_text("❌ File nahi mili.\n\n" + SOURCE_HINT)
+
+
+# ==============================================================================
 # SECTION: BOOT SEQUENCE
 # ==============================================================================
 # ==============================================================================
@@ -11125,6 +11395,10 @@ async def main() -> None:
 
     # 3. Voice chat engine
     await anon.boot()
+
+    # 3a. Font: DB ka style saare messages par (start/help/play sab)
+    with suppress(Exception):
+        apply_font_to_languages(font_for())
 
     # 3b. Custom branding images (DB reference -> Telegram/URL se load)
     with suppress(Exception):

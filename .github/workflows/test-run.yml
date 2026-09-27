@@ -63,7 +63,7 @@ jobs:
       SESSION3: ${{ secrets.SESSION3 || '' }}
       SESSION4: ${{ secrets.SESSION4 || '' }}
       # ---- Behaviour ---------------------------------------------------------
-      LANG_CODE: "hi"
+      LANG_CODE: "en"
       LOG_LEVEL: "INFO"
       RUN_MINUTES: ${{ github.event.inputs.minutes || '20' }}
       BACKUP_ON_START: "True"
