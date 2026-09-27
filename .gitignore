@@ -1,0 +1,15 @@
+.env
+.cache
+.idea
+.DS_Store
+.venv/
+venv/
+cache/
+downloads/
+__pycache__/
+*.session
+*.session-journal
+!requirements.txt
+data/
+firebase_key.json
+firebase_credentials.json
