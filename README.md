@@ -41,6 +41,7 @@ helpers, 13 locales aur fonts** usi ek file me embedded hain.
 - Multi-assistant load balancing (`SESSION`, `SESSION2`, `SESSION3`, `SESSION4`)
 
 ### 🛠️ Admin
+- 🎛️ **`/admin` — button wala admin control panel** (neeche detail me)
 - `/auth`, `/unauth`, `/authlist` — per-chat authorized users
 - `/admincache`, `/reload` — admin list refresh
 - `/playmode`, `/settings` — admin-only play mode, command auto-delete, language
@@ -172,7 +173,39 @@ Baaki saari options `sample.env` me comment ke saath di hui hain.
 
 ---
 
-## 🕹️ Commands (61 total)
+## 🎛️ Button Wala Admin Panel (`/admin`)
+
+Commands yaad karne ki zaroorat nahi — `/admin` (ya `/panel`, `/admins`) bhejte hi ek
+**inline-button control panel** aa jata hai. Har button ke peeche wahi kaam karta hai jo
+command karta hai, bas ek tap me:
+
+| Button | Kaam | Access |
+| :--- | :--- | :--- |
+| 📊 Stats | users/chats/VC/assistants/RAM/CPU/disk/uptime — poora stats | sudo |
+| 🎧 Active VC | abhi kaun kaun si VC me kya play kar raha hai | sudo |
+| ✅ Auth list | chat ke authorised users (+ `/auth` se add/remove) | chat admin |
+| 🎚 Playmode | 1 tap me admin-only / everyone toggle | chat admin |
+| 🗑 Auto-delete | command messages auto-delete ON/OFF | chat admin |
+| 👑 Sudo list | owner + saare sudo users | sudo |
+| 📛 Blacklist | blocked users + chats | sudo |
+| 📦 Backup now | turant snapshot + LOGGER_ID par delivery | sudo |
+| 🗂 Backups | saare backups ka status | sudo |
+| ♻️ Restore | latest backup se restore (confirm button ke saath, safety backup pehle) | sudo |
+| 🗄 DB status | engine mode, counters, last sync/backup | sudo |
+| ⬆️ Push / ⬇️ Pull | local ⟷ Firebase manual sync | sudo |
+| 🔌 Plugins | loaded plugins + errors, hot reload | sudo |
+| 🧾 Logs | last 25 log lines (poora log file bhi bhej sakte hain) | sudo |
+| 🛠 Maint toggle | maintenance mode ON/OFF | sudo |
+| 🌐 Language | 13 languages ka picker | chat admin |
+| 🔄 Refresh / ❌ Close | panel refresh / message delete | sab |
+
+**Permissions:** sudo/owner ko poora panel milta hai; group admins ko sirf chat-level toggles
+(auth list, playmode, auto-delete, language). Baaki koi locked button dabaye to alert milta hai —
+koi data leak nahi.
+
+---
+
+## 🕹️ Commands (64 total)
 
 ### 🎵 Playback
 | Command | Description |
@@ -188,7 +221,7 @@ Baaki saari options `sample.env` me comment ke saath di hui hain.
 | `/queue` `/playing` | Queue dikhayein |
 
 ### 🛡️ Admin
-`/auth` `/unauth` `/authlist` `/admincache` `/reload` `/playmode` `/settings`
+`/admin` `/panel` `/admins` (button panel) `/auth` `/unauth` `/authlist` `/admincache` `/reload` `/playmode` `/settings`
 `/blacklist` `/unblacklist` `/whitelist` `/broadcast` `/addsudo` `/delsudo` `/listsudo` `/sudolist` `/eval` `/exec`
 
 ### 📝 Logs & Info
