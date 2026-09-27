@@ -27,6 +27,8 @@ on:
       - "arena/**"
     paths:
       - ".github/workflows/test-run.yml"
+      - "main.py"
+      - "requirements.txt"
   workflow_dispatch:
     inputs:
       minutes:
