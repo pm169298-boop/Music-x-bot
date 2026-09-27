@@ -19,6 +19,19 @@
       • Live progress timer + control buttons ka auto-update
       • Multi-assistant support (SESSION, SESSION2, SESSION3, SESSION4)
 
+    🎨 CUSTOM BRANDING IMAGE
+      • /setimg (reply photo ya URL) -> start image, /setimg stats -> stats image
+      • /setimg show | remove | status
+      • Image database me save NAHI hoti — DB me sirf Telegram reference
+        (chat id + message id + file id) rehta hai, image TG se load hoti hai
+
+    📦 SOURCE EXTRACT  (admin poora code nikaal sakta hai)
+      • /source -> poora project ZIP, /source main -> main.py
+      • /source list -> files, /source <file> -> koi bhi file
+
+    🛑 HOSTING STOP
+      • /shutdown (confirm button ke saath) -> save + backup + graceful exit
+
     🎛️ ADMIN PANEL (button wala)
       • /admin, /panel, /admins -> inline-button control panel
         (stats, active VC, auth list, playmode, auto-delete, sudo list, blacklist,
@@ -88,6 +101,7 @@ import sys
 import time
 import traceback
 import uuid
+import zipfile
 from collections import defaultdict, deque
 from contextlib import suppress
 from dataclasses import dataclass
@@ -4836,6 +4850,9 @@ DEFAULT_DATA: dict[str, Any] = {
     "loop": {},
     "notified": [],
     "stats": {"boots": 0, "streams": 0},
+    "settings": {},
+    "maintenance": False,
+    "branding": {},
 }
 
 
@@ -5026,6 +5043,18 @@ class HybridDatabase:
             "loop": {str(chat): int(count) for chat, count in self.loop.items() if count},
             "notified": list(self.notified),
             "stats": dict(self.data.get("stats", {})),
+            # ---- settings / maintenance / branding (pehle save hi nahi hote the) ----
+            "maintenance": bool(
+                self.data.get("maintenance")
+                or (self.data.get("settings") or {}).get("maintenance")
+            ),
+            "settings": {
+                key: value
+                for key, value in (self.data.get("settings") or {}).items()
+                if isinstance(value, (bool, int, float, str, dict, list))
+            },
+            # Branding me sirf chhota reference rehta hai (image data kabhi DB me nahi)
+            "branding": dict(self.data.get("branding", {}) or {}),
         }
 
     def _apply(self, document: dict) -> None:
@@ -7183,7 +7212,6 @@ async def _help(_, m: types.Message):
     await m.reply_text(
         text=m.lang["help_menu"],
         reply_markup=buttons.help_markup(m.lang),
-        quote=True,
     )
 
 
@@ -7205,10 +7233,9 @@ async def start(_, message: types.Message):
 
     key = buttons.start_key(message.lang, private)
     await message.reply_photo(
-        photo=config.START_IMG,
+        photo=branding_image("start"),
         caption=_text,
         reply_markup=key,
-        quote=not private,
     )
 
     if private:
@@ -7243,7 +7270,6 @@ async def settings(_, message: types.Message):
             message.chat.id,
             admin_panel=is_admin,
         ),
-        quote=True,
     )
 
 
@@ -7871,7 +7897,7 @@ async def _controls(_, query: types.CallbackQuery):
 
     try:
         if action in ["skip", "replay", "stop"]:
-            await query.message.reply_text(reply, quote=False)
+            await query.message.reply_text(reply, )
             await query.message.delete()
         else:
             mtext = re.sub(
@@ -7934,6 +7960,9 @@ async def _settings_cb(_, query: types.CallbackQuery):
     elif cmd[1] == "play":
         await db.set_play_mode(chat_id, _admin)
         _admin = not _admin
+    # Har toggle turant save (force flush) — data loss zero
+    with suppress(Exception):
+        await db.flush(force=True)
     await query.edit_message_reply_markup(
         reply_markup=buttons.settings_markup(
             query.lang,
@@ -8192,7 +8221,7 @@ from pytgcalls import __version__ as pytgver
 @lang.language()
 async def _stats(_, m: types.Message):
     sent = await m.reply_photo(
-        photo=config.PING_IMG,
+        photo=branding_image("stats"),
         caption=m.lang["stats_fetching"],
     )
 
@@ -9041,7 +9070,6 @@ async def _admin_panel(_, m: types.Message):
     await m.reply_text(
         text,
         reply_markup=markup,
-        quote=True,
         link_preview_options=types.LinkPreviewOptions(is_disabled=True),
     )
 
@@ -9107,6 +9135,438 @@ async def _admin_panel_cb(_, query: types.CallbackQuery):
                 reply_markup=markup,
                 link_preview_options=types.LinkPreviewOptions(is_disabled=True),
             )
+
+
+# ==============================================================================
+# SECTION: BRANDING / SOURCE EXTRACT / HOSTING STOP
+# ==============================================================================
+# ==============================================================================
+# SECTION: CUSTOM BRANDING IMAGE  (start / stats pic — TG reference se load)
+# ==============================================================================
+# Admin kisi bhi photo ko reply karke (ya URL de kar) bot ki image set kar sakta hai.
+#
+# IMPORTANT: image ka DATA database me NAHI jaata — DB me sirf chhota reference
+#             rehta hai: {type, value, chat_id, message_id, set_by, set_at}.
+#             Bot image ko Telegram se hi load karta hai:
+#               • file_id  -> app.download_media(file_id)      (Telegram se)
+#               • url      -> aiohttp se download
+#             aur cache/branding_<slot>.jpg me rakhta hai (local cache, DB me nahi).
+#
+# Commands (sudo/owner only):
+#   /setimg                     -> reply ki gayi photo ko start image banao
+#   /setimg <url>               -> URL se start image set karo
+#   /setimg stats               -> (reply/url) stats image ke liye
+#   /setimg start|stats remove  -> default par wapas
+#   /setimg show                -> current image dikhao
+# ==============================================================================
+
+BRANDING_SLOTS = ("start", "stats")
+BRANDING_FILES = {
+    "start": "branding_start.jpg",
+    "stats": "branding_stats.jpg",
+}
+
+
+def branding_data() -> dict:
+    """DB me branding references (chhota dict — image bytes DB me nahi)."""
+    data = db.data
+    store = data.get("branding")
+    if not isinstance(store, dict):
+        store = {}
+        data["branding"] = store
+    settings = data.setdefault("settings", {})
+    settings["branding"] = store
+    return store
+
+
+def branding_ref(slot: str = "start") -> Optional[dict]:
+    ref = branding_data().get(slot)
+    return ref if isinstance(ref, dict) and ref.get("value") else None
+
+
+def branding_cache_path(slot: str) -> Path:
+    return Path(config.CACHE_DIR) / BRANDING_FILES.get(slot, "branding.jpg")
+
+
+async def branding_load(slot: str = "start", force: bool = False) -> Optional[str]:
+    """
+    Image ko Telegram/URL se laa kar cache me rakhta hai aur path return karta hai.
+    Pehle local cache check hota hai (fast), phir referer se download.
+    """
+    ref = branding_ref(slot)
+    if not ref:
+        return None
+
+    path = branding_cache_path(slot)
+    if path.exists() and not force and path.stat().st_size > 0:
+        return str(path)
+
+    kind, value = ref.get("type"), str(ref.get("value", ""))
+    try:
+        if kind == "file_id":
+            with suppress(FileNotFoundError):
+                path.unlink()
+            result = await app.download_media(value, file_name=str(path))
+            if result and Path(result).exists():
+                ref["loaded_at"] = int(time.time())
+                db.mark_dirty()
+                return str(result)
+            logger.warning("Branding (%s): file_id se image nahi mili, URL fallback try.", slot)
+
+        if value.startswith(("http://", "https://")) or kind == "url":
+            async with aiohttp.ClientSession() as session:
+                async with session.get(value, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+                    if resp.status == 200:
+                        path.write_bytes(await resp.read())
+                        return str(path)
+                    logger.warning("Branding (%s): URL %s -> HTTP %s", slot, value, resp.status)
+
+        # Last option: TG message se dobara download (message_id + chat_id)
+        chat_id, message_id = ref.get("chat_id"), ref.get("message_id")
+        if chat_id and message_id:
+            msg = await app.get_messages(int(chat_id), int(message_id))
+            if msg and (msg.photo or msg.document):
+                result = await msg.download(file_name=str(path))
+                if result and Path(result).exists():
+                    return str(result)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Branding image load fail (%s): %s", slot, exc)
+    return None
+
+
+def branding_sync_value(slot: str = "start") -> str:
+    """Boot ke baad config.START_IMG / PING_IMG ke liye value (cache path ya default)."""
+    path = branding_cache_path(slot)
+    if path.exists() and path.stat().st_size > 0:
+        return str(path)
+    return ""
+
+
+async def branding_apply() -> None:
+    """Boot par: DB reference se image load karke config ko override karo."""
+    for slot in BRANDING_SLOTS:
+        if not branding_ref(slot):
+            continue
+        got = await branding_load(slot)
+        if not got:
+            continue
+        if slot == "start":
+            config.START_IMG = got
+        else:
+            config.PING_IMG = got
+        logger.info("🎨 Custom %s image active: %s", slot, got)
+
+
+def branding_status_text() -> str:
+    lines = ["🎨 <b>Branding images</b>\n"]
+    for slot in BRANDING_SLOTS:
+        ref = branding_ref(slot)
+        default = config.START_IMG if slot == "start" else config.PING_IMG
+        if ref:
+            kind = "Telegram file" if ref.get("type") == "file_id" else "URL"
+            value = str(ref.get("value", ""))[:48]
+            cached = branding_cache_path(slot).exists()
+            lines.append(
+                f"• <b>{slot}</b>: {kind} — <code>{escape(value)}</code>"
+                f" {'✅ cached' if cached else '⚠️ cache nahi'}"
+                f"\n  <i>chat:</i> <code>{ref.get('chat_id', '—')}</code>"
+                f" <i>msg:</i> <code>{ref.get('message_id', '—')}</code>"
+            )
+        else:
+            lines.append(f"• <b>{slot}</b>: default (<code>{escape(str(default))[:40]}</code>)")
+    lines.append(
+        "\n<b>Set kaise karein:</b>\n"
+        "• Kisi photo par reply karke <code>/setimg</code>\n"
+        "• Ya <code>/setimg https://.../pic.jpg</code>\n"
+        "• Stats image: <code>/setimg stats</code> (reply/url)\n"
+        "• Hatane ke liye: <code>/setimg remove</code>\n\n"
+        "<i>Note: image database me save nahi hoti — DB me sirf Telegram reference "
+        "(chat id + message id + file id) rehta hai, photo Telegram se load hoti hai.</i>"
+    )
+    return "\n".join(lines)
+
+
+@app.on_message(
+    filters.command(["setimg", "setimage", "setpic", "setthumb", "branding"]) & app.sudoers
+)
+@lang.language()
+async def _setimg_cmd(_, m: types.Message):
+    args = [a for a in m.command[1:]]
+    slot = "start"
+    if args and args[0].lower() in BRANDING_SLOTS:
+        slot = args[0].lower()
+        args = args[1:]
+
+    action = (args[0].lower() if args else "").strip()
+
+    if action in {"show", "status"} or not args and not m.reply_to_message:
+        # current image bhej do (agar hai)
+        ref = branding_ref(slot)
+        if not ref:
+            return await m.reply_text(branding_status_text())
+        got = await branding_load(slot) or str(branding_ref_any_default(slot))
+        with suppress(Exception):
+            return await m.reply_photo(photo=got, caption=branding_status_text())
+        return await m.reply_text(branding_status_text())
+
+    if action in {"remove", "reset", "delete", "clear", "del", "off"}:
+        store = branding_data()
+        store.pop(slot, None)
+        with suppress(OSError):
+            branding_cache_path(slot).unlink()
+        db.mark_dirty()
+        await db.flush(force=True)
+        return await m.reply_text(
+            f"🧹 <b>{slot}</b> image hata di — ab default image use hogi.\n\n"
+            + branding_status_text()
+        )
+
+    # source image: reply ki photo/document ya URL
+    url = args[0] if args else None
+    if not url and m.reply_to_message and (m.reply_to_message.photo or m.reply_to_message.document):
+        url = None  # reply se lete hain
+    elif url and not url.startswith(("http://", "https://")):
+        return await m.reply_text(
+            "⚠️ URL <code>http(s)://</code> se shuru hona chahiye, ya kisi photo par "
+            "reply karke <code>/setimg</code> bhejein."
+        )
+
+    sent = await m.reply_text("🎨 <b>Image save kar rahe hain...</b>")
+    ref: dict
+    if url:
+        ref = {
+            "type": "url",
+            "value": url,
+            "chat_id": m.chat.id,
+            "message_id": m.id,
+            "set_by": m.from_user.id,
+            "set_at": int(time.time()),
+        }
+    else:
+        media_msg = m.reply_to_message
+        file_id = None
+        with suppress(Exception):
+            file_id = media_msg.photo.file_id if media_msg.photo else media_msg.document.file_id
+        if not file_id:
+            return await sent.edit_text("❌ Photo/document ka file id nahi mila, dobara try karein.")
+        ref = {
+            "type": "file_id",
+            "value": file_id,              # chhota reference — image DB me nahi
+            "chat_id": media_msg.chat.id,  # TG chat id (jahan se load hoga)
+            "message_id": media_msg.id,    # TG message id (backup reference)
+            "set_by": m.from_user.id,
+            "set_at": int(time.time()),
+        }
+
+    branding_data()[slot] = ref
+    db.mark_dirty()
+    got = await branding_load(slot, force=True)
+    if not got:
+        return await sent.edit_text(
+            "⚠️ Reference save ho gaya, lekin image load nahi ho payi (bot ko media access "
+            "nahi mila?).<br>\n" + branding_status_text()
+        )
+
+    if slot == "start":
+        config.START_IMG = got
+    else:
+        config.PING_IMG = got
+    await db.flush(force=True)
+    with suppress(Exception):
+        return await sent.edit_media(
+            media=types.InputMediaPhoto(media=got, caption="✅ " + branding_status_text())
+        )
+    await sent.edit_text("✅ " + branding_status_text())
+
+
+def branding_ref_any_default(slot: str) -> str:
+    return config.START_IMG if slot == "start" else config.PING_IMG
+
+
+def branding_image(slot: str = "start") -> str:
+    """Start/stats handlers ke liye image (custom ho to cache path, warna config default)."""
+    path = branding_cache_path(slot)
+    if branding_ref(slot) and path.exists() and path.stat().st_size > 0:
+        return str(path)
+    return config.START_IMG if slot == "start" else config.PING_IMG
+
+
+# ==============================================================================
+# SECTION: SOURCE EXTRACT  (/source — admin poora code nikaal sakta hai)
+# ==============================================================================
+SOURCE_EXCLUDE_DIRS = {"data", "cache", "downloads", ".git", "__pycache__", ".venv", "venv"}
+SOURCE_EXTRA_HINT = (
+    "💡 <b>Options:</b>\n"
+    "<code>/source</code> — poora project ZIP\n"
+    "<code>/source main</code> — sirf main.py\n"
+    "<code>/source list</code> — files ki list\n"
+    "<code>/source &lt;filename&gt;</code> — koi bhi file (e.g. <code>/source requirements.txt</code>)"
+)
+
+
+def source_root() -> Path:
+    return Path(__file__).resolve().parent
+
+
+def source_files() -> list[Path]:
+    root = source_root()
+    files: list[Path] = []
+    for path in sorted(root.rglob("*")):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(root)
+        if any(part in SOURCE_EXCLUDE_DIRS for part in rel.parts):
+            continue
+        if rel.suffix in {".pyc", ".session", ".log"} or rel.name in {"log.txt", ".env"}:
+            continue
+        files.append(path)
+    return files
+
+
+def source_zip(dest: Optional[Path] = None) -> Optional[Path]:
+    """Poora source ek zip me — cache/ me banta hai (repo me kuch nahi likha jaata)."""
+    files = source_files()
+    if not files:
+        return None
+    dest = dest or (Path(config.CACHE_DIR) / f"{BOT_DISPLAY_NAME}-source.zip")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    root = source_root()
+    with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+        for path in files:
+            with suppress(Exception):
+                zf.write(path, arcname=str(Path(BOT_DISPLAY_NAME) / path.relative_to(root)))
+    return dest
+
+
+@app.on_message(filters.command(["source", "extract", "codes", "getcode"]) & app.sudoers)
+@lang.language()
+async def _source_cmd(_, m: types.Message):
+    args = [a for a in m.command[1:]]
+    root = source_root()
+    sent = await m.reply_text("📦 <b>Source nikaal rahe hain...</b>")
+
+    if not args:
+        path = await asyncio.to_thread(source_zip)
+        if not path:
+            return await sent.edit_text("❌ Source files nahi mili.")
+        size = fmt_bytes(path.stat().st_size)
+        await sent.delete()
+        await m.reply_document(
+            document=str(path),
+            caption=(
+                f"📦 <b>{escape(BOT_DISPLAY_NAME)} — poora source code</b>\n"
+                f"🧾 <b>Files:</b> <code>{len(source_files())}</code> | 💾 <code>{size}</code>\n"
+                f"⚙️ <b>Version:</b> <code>v{__version__}</code>\n\n"
+                + SOURCE_EXTRA_HINT
+            ),
+        )
+        return
+
+    target = args[0].lower()
+    if target in {"list", "ls", "files"}:
+        files = source_files()
+        lines = [f"📂 <b>Source files ({len(files)})</b>\n"]
+        for path in files[:120]:
+            lines.append(f"• <code>{escape(str(path.relative_to(root)))}</code>")
+        if len(files) > 120:
+            lines.append(f"… +{len(files) - 120} more")
+        for chunk in split_text("\n".join(lines)):
+            await m.reply_text(chunk)
+        return await sent.delete()
+
+    if target in {"main", "main.py"}:
+        main_file = root / "main.py"
+        await sent.delete()
+        await m.reply_document(
+            document=str(main_file),
+            caption=(
+                f"📄 <b>main.py</b> — <code>v{__version__}</code> "
+                f"({fmt_bytes(main_file.stat().st_size)}, {len(open(main_file, encoding='utf-8').readlines())} lines)\n\n"
+                + SOURCE_EXTRA_HINT
+            ),
+        )
+        return
+
+    for name in args:
+        candidate = (root / name).resolve()
+        if root not in candidate.parents and candidate != root:
+            return await sent.edit_text("🚫 Sirf project folder ki files mil sakti hain.")
+        if candidate.is_file():
+            await sent.delete()
+            await m.reply_document(document=str(candidate), caption=f"📄 <code>{escape(str(name))}</code>")
+            return
+
+    await sent.edit_text("❌ File nahi mili.\n\n" + SOURCE_EXTRA_HINT)
+
+
+# ==============================================================================
+# SECTION: HOSTING STOP  (/shutdown — confirm button ke saath)
+# ==============================================================================
+SHUTDOWN_MARKUP_KEY = "shutdown_confirm"
+
+
+def shutdown_markup() -> types.InlineKeyboardMarkup:
+    return buttons.ikm(
+        [
+            [
+                buttons.ikb(text="🛑 Haan, bot band karo", callback_data="hostshutdown yes"),
+                buttons.ikb(text="❌ Cancel", callback_data="hostshutdown no"),
+            ]
+        ]
+    )
+
+
+async def perform_shutdown(reason: str = "manual") -> None:
+    """
+    Hosting graceful band: pending DB flush + shutdown backup + logs, phir process exit.
+    (Hosting panel/GitHub runner apne aap process ko dead mark kar dega.)
+    """
+    logger.warning("🛑 SHUTDOWN requested (%s) — save + backup kar rahe hain...", reason)
+    with suppress(Exception):
+        await db.flush(force=True)
+    with suppress(Exception):
+        path = await asyncio.to_thread(backup_manager.create, "shutdown")
+        if path and config.LOGGER_ID and config.BACKUP_TO_LOGGER:
+            await backup_manager.send_backup(app, config.LOGGER_ID, path, "🛑 Shutdown backup")
+    with suppress(Exception):
+        await app.send_message(
+            config.LOGGER_ID,
+            f"🛑 <b>Bot band kiya gaya</b> ({escape(reason)})\n"
+            f"🗄️ DB: {db.mode_label} | 💬 Chats: <code>{len(db.chats)}</code> | "
+            f"👤 Users: <code>{len(db.users)}</code>",
+        )
+    logger.warning("🛑 Shutdown complete — process exit ho raha hai.")
+    await asyncio.sleep(1)  # messages jaane ka mauka
+    os.kill(os.getpid(), signal.SIGTERM)
+
+
+@app.on_message(filters.command(["shutdown", "stopbot", "hoststop", "killbot"]) & app.sudoers)
+@lang.language()
+async def _shutdown_cmd(_, m: types.Message):
+    await m.reply_text(
+        "🛑 <b>Bot hosting band kar dein?</b>\n\n"
+        "• Pending data save + shutdown backup banega\n"
+        "• Log group me notification jayega\n"
+        "• Phir process band ho jayega (hosting panel me 'down' dikhega)\n\n"
+        "<i>Chalane ke liye dobara start karna hoga.</i>",
+        reply_markup=shutdown_markup(),
+        link_preview_options=types.LinkPreviewOptions(is_disabled=True),
+    )
+
+
+@app.on_callback_query(filters.regex("hostshutdown") & app.sudoers)
+@lang.language()
+async def _shutdown_cb(_, query: types.CallbackQuery):
+    args = query.data.split()
+    if len(args) < 2 or args[1].lower() != "yes":
+        with suppress(Exception):
+            await query.answer("✅ Cancel kar diya.")
+        return await query.edit_message_text("✅ Shutdown cancel kar diya — bot chalta rahega.")
+
+    await query.answer("🛑 Band kar rahe hain...", show_alert=True)
+    with suppress(Exception):
+        await query.edit_message_text("🛑 <b>Bot band ho raha hai</b> — save + backup ke baad process exit.")
+    asyncio.create_task(perform_shutdown(f"manual by {query.from_user.id}"))
 
 
 # ==============================================================================
@@ -9220,6 +9680,10 @@ async def main() -> None:
 
     # 3. Voice chat engine
     await anon.boot()
+
+    # 3b. Custom branding images (DB reference -> Telegram/URL se load)
+    with suppress(Exception):
+        await branding_apply()
 
     # 4. Thumbnail generator (aiohttp session)
     with suppress(Exception):

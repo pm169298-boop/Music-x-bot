@@ -77,6 +77,16 @@ helpers, 13 locales aur fonts** usi ek file me embedded hain.
 - Optional: `FIREBASE_STORAGE_BUCKET` par cloud upload
 - Startup + shutdown par bhi automatic backup
 
+### 🎨 Custom Branding Image (naya)
+- `/setimg` — kisi **photo par reply** karke, ya `/setimg <url>` se bot ki image set (start pic)
+- `/setimg stats ...` — stats/alive ke liye alag image · `/setimg show` · `/setimg remove`
+- **Image database me save nahi hoti** — DB me sirf chhota reference (Telegram `chat_id` + `message_id` + `file_id`, ya URL) rehta hai, photo Telegram se load hoti hai aur `cache/` me rakhi jaati hai
+
+### 📦 Source Extract + Hosting Stop (naya)
+- `/source` — poora project **ZIP** me (main.py + plugins + config + docs)
+- `/source main` — sirf `main.py` · `/source list` — files list · `/source <filename>` — koi bhi file
+- `/shutdown` — confirm button ke saath bot **gracefully band**: pending data save + shutdown backup + LOGGER_ID me notification, phir process exit
+
 ### 🌍 Baaki
 - **13 languages** — ar, de, en, es, fr, hi, ja, my, pa, pt, ru, tr, zh (`/lang`)
 - Custom thumbnail generation (fonts embedded)
@@ -205,7 +215,7 @@ koi data leak nahi.
 
 ---
 
-## 🕹️ Commands (64 total)
+## 🕹️ Commands (77 total)
 
 ### 🎵 Playback
 | Command | Description |
@@ -235,6 +245,16 @@ koi data leak nahi.
 | `/restore` | owner | Backup file par reply → database restore |
 | `/dbstatus` | sudo | Storage engine status (Firebase/local) |
 | `/syncdb push\|pull\|reconnect` | owner | Manual Firebase sync |
+
+### 🎨 Branding / Source / Hosting
+| Command | Access | Description |
+| :--- | :--- | :--- |
+| `/setimg` (reply/url) | sudo | Start image set (TG reference save, DB me image nahi) |
+| `/setimg stats` | sudo | Stats/alive ki image set |
+| `/setimg show\|remove` | sudo | Current dikhao / default par wapas |
+| `/source` | sudo | Poora project ZIP (main.py + plugins + docs) |
+| `/source main\|list\|<file>` | sudo | main.py / files list / koi bhi file |
+| `/shutdown` (confirm) | sudo | Save + backup + bot band (hosting stop) |
 
 ### 🧩 Plugins & Misc
 `/plugins` `/plugin list|scan|reload|enable|disable <name>` `/maintenance on|off` `/start` `/help`
@@ -314,6 +334,15 @@ Music-x-bot/
 ```
 
 ---
+
+## 🩹 Latest Fixes (v3.1.1)
+
+| Issue | Fix |
+| :--- | :--- |
+| `/start`, `/help`, `/admin` crash: `Message.reply() got an unexpected keyword argument 'quote'` | Kurigram 2.2.26 me `quote` kwarg nahi hai — poore codebase se hata diya (build-level sanitizer, taaki aage bhi na aaye) |
+| Settings / maintenance / branding restart ke baad gayab | `_snapshot()` me `settings`, `maintenance`, `branding` keys add (pehle save hi nahi hote the) |
+| Toggle karne ke turant baad data loss | Admin panel + `/settings` me har toggle par `db.flush(force=True)` |
+| `SESSION` na hone par bot start hi nahi hota tha | **Bot-only mode**: sirf `API_ID` + `API_HASH` + `BOT_TOKEN` mandatory; `LOGGER_ID` missing → `OWNER_ID` fallback; `/play` friendly message deta hai |
 
 ## 🙏 Credits & License
 
