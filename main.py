@@ -4089,6 +4089,16 @@ class Queue:
 # ==============================================================================
 # SECTION: INLINE KEYBOARDS
 # ==============================================================================
+def mode_label(state: bool) -> str:
+    """Play-mode ka button label."""
+    return "🔒 Admin only" if state else "👥 Everyone"
+
+
+def toggle_label(state: bool) -> str:
+    """ON/OFF toggle ka button label."""
+    return "✅ ON" if state else "❌ OFF"
+
+
 class Inline:
     def __init__(self):
         self.ikm = types.InlineKeyboardMarkup
@@ -4184,10 +4194,15 @@ class Inline:
         )
 
     def settings_markup(
-        self, lang: dict, admin_only: bool, cmd_delete: bool, language: str, chat_id: int
+        self,
+        lang: dict,
+        admin_only: bool,
+        cmd_delete: bool,
+        language: str,
+        chat_id: int,
+        admin_panel: bool = False,
     ) -> types.InlineKeyboardMarkup:
-        return self.ikm(
-            [
+        rows = [
                 [
                     self.ikb(
                         text=lang["play_mode"] + " ➜",
@@ -4209,8 +4224,13 @@ class Inline:
                     ),
                     self.ikb(text=lang_codes[language], callback_data="language"),
                 ],
-            ]
-        )
+        ]
+        if admin_panel:
+            # Settings se seedha button wale admin panel par jaayein (dono linked)
+            rows.append(
+                [self.ikb(text="🎛️ Admin Panel", callback_data="admpanel home")]
+            )
+        return self.ikm(rows)
 
     def start_key(
         self, lang: dict, private: bool = False
@@ -7167,10 +7187,19 @@ async def settings(_, message: types.Message):
     admin_only = await db.get_play_mode(message.chat.id)
     cmd_delete = await db.get_cmd_delete(message.chat.id)
     _language = await db.get_lang(message.chat.id)
+    # Button par True/False ki jagah readable label + admin panel ka link
+    is_admin = message.from_user.id in app.sudoers or message.from_user.id in await db.get_admins(
+        message.chat.id
+    )
     await message.reply_text(
         text=message.lang["start_settings"].format(message.chat.title),
         reply_markup=buttons.settings_markup(
-            message.lang, admin_only, cmd_delete, _language, message.chat.id
+            message.lang,
+            mode_label(admin_only),
+            toggle_label(cmd_delete),
+            _language,
+            message.chat.id,
+            admin_panel=is_admin,
         ),
         quote=True,
     )
@@ -7866,10 +7895,11 @@ async def _settings_cb(_, query: types.CallbackQuery):
     await query.edit_message_reply_markup(
         reply_markup=buttons.settings_markup(
             query.lang,
-            _admin,
-            _delete,
+            mode_label(_admin),
+            toggle_label(_delete),
             _language,
             chat_id,
+            admin_panel=True,  # yahan sirf admins/sudo pahunchte hain (admin_check)
         )
     )
 
@@ -8589,7 +8619,9 @@ ADMIN_PANEL_SUDO_ONLY: frozenset[str] = frozenset(
 )
 
 # Chat admin (ya sudo) ke liye
-ADMIN_PANEL_CHAT_LEVEL: frozenset[str] = frozenset({"auth", "play", "delete", "lang"})
+ADMIN_PANEL_CHAT_LEVEL: frozenset[str] = frozenset(
+    {"auth", "settings", "play", "delete", "lang"}
+)
 
 
 def admin_panel_markup(
@@ -8608,8 +8640,7 @@ def admin_panel_markup(
         rows.append(
             [
                 ikb(text="✅ Auth list", callback_data="admpanel auth"),
-                ikb(text="🎚 Playmode", callback_data="admpanel play"),
-                ikb(text="🗑 Auto-delete", callback_data="admpanel delete"),
+                ikb(text="⚙️ Chat Settings", callback_data="admpanel settings"),
             ]
         )
 
@@ -8675,6 +8706,44 @@ def admin_panel_home_text(is_sudo: bool, in_group: bool, chat_id: int) -> str:
     if not is_sudo:
         text += "\n\n🔒 <i>Kuch buttons sirf sudo/owner ke liye hain.</i>"
     return text
+
+
+async def admin_panel_settings_view(
+    chat_id: int, note: str = ""
+) -> tuple[str, types.InlineKeyboardMarkup]:
+    """
+    Chat settings + saare toggles ek hi panel me.
+    (`/settings` ka panel bhi isi jagah link hota hai — dono ek doosre se connected.)
+    """
+    play_mode = await db.get_play_mode(chat_id)
+    cmd_delete = await db.get_cmd_delete(chat_id)
+    language = await db.get_lang(chat_id)
+    text = (
+        "⚙️ <b>Chat Settings</b>\n\n"
+        f"🎚️ <b>Playmode:</b> <code>{'Admin only' if play_mode else 'Everyone'}</code>\n"
+        f"🗑 <b>Auto-delete:</b> <code>{'ON' if cmd_delete else 'OFF'}</code>\n"
+        f"🌐 <b>Language:</b> <code>{language}</code>\n"
+        "<blockquote>Tap karke turant badlein — saari chat settings ek hi jagah.</blockquote>"
+    )
+    if note:
+        text += f"\n{note}"
+    rows = [
+        [
+            buttons.ikb(
+                text=f"🎚 Playmode: {mode_label(play_mode)}",
+                callback_data="admpanel play",
+            )
+        ],
+        [
+            buttons.ikb(
+                text=f"🗑 Auto-delete: {toggle_label(cmd_delete)}",
+                callback_data="admpanel delete",
+            )
+        ],
+        [buttons.ikb(text="🌐 Language badlein", callback_data="admpanel lang")],
+        [buttons.ikb(text="🔙 Admin Panel", callback_data="admpanel home")],
+    ]
+    return text, buttons.ikm(rows)
 
 
 async def admin_panel_section(
@@ -8757,32 +8826,25 @@ async def admin_panel_section(
         text += "\n<i>Add/remove: /auth (reply), /unauth (reply)</i>"
         return text, markup()
 
-    if section == "play":
-        current = await db.get_play_mode(chat_id)
-        await db.set_play_mode(chat_id, current)
-        now = not current
-        return (
-            f"🎚️ <b>Playmode:</b> <code>{'Admin only' if now else 'Everyone'}</code>\n\n"
-            + (
-                "Ab sirf <b>chat admins / authorised users</b> gaana play kar sakte hain."
-                if now
-                else "Ab <b>sabhi members</b> gaana play kar sakte hain."
-            ),
-            markup(),
-        )
-
-    if section == "delete":
-        current = await db.get_cmd_delete(chat_id)
-        await db.set_cmd_delete(chat_id, not current)
-        return (
-            f"🗑 <b>Auto-delete commands:</b> <code>{'ON' if not current else 'OFF'}</code>\n\n"
-            + (
-                "Ab bot ke command messages automatically delete honge."
+    if section in {"settings", "play", "delete"}:
+        note = ""
+        if section == "play":
+            current = await db.get_play_mode(chat_id)
+            await db.set_play_mode(chat_id, current)
+            note = (
+                "🔒 Ab sirf <b>chat admins / authorised users</b> gaana play kar sakte hain."
                 if not current
-                else "Ab command messages delete nahi honge."
-            ),
-            markup(),
-        )
+                else "👥 Ab <b>sabhi members</b> gaana play kar sakte hain."
+            )
+        elif section == "delete":
+            current = await db.get_cmd_delete(chat_id)
+            await db.set_cmd_delete(chat_id, not current)
+            note = (
+                "🗑 Ab bot ke command messages automatically delete honge."
+                if not current
+                else "⌨️ Ab command messages delete nahi honge."
+            )
+        return await admin_panel_settings_view(chat_id, note)
 
     if section == "lang":
         current = await db.get_lang(chat_id)
