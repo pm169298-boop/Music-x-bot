@@ -104,7 +104,7 @@ jobs:
             echo "=== pip install -r requirements.txt ==="
             python -m pip install --no-input -r requirements.txt 2>&1
             echo "=== import check ==="
-            python -c "import kurigram, pytgcalls, yt_dlp, psutil; print('deps OK')" 2>&1
+            python -c "import pyrogram, pytgcalls, yt_dlp, psutil; print('deps OK — pyrogram', pyrogram.__version__)" 2>&1
             echo "=== pip list (top) ==="
             python -m pip list 2>&1 | head -40
           } 2>&1 | tee -a ci-artifacts/ci.log
